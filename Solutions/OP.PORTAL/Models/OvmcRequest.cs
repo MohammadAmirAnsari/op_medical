@@ -62,7 +62,7 @@ namespace OP.PORTAL.Models
         public bool IsTnCAccepted { get; set; } = false;
 
         [Required(ErrorMessageResourceName = "ResxRequired", ErrorMessageResourceType = typeof(Resource))]
-        public string RequestStatus { get; set; } = OvmcRequestStatus.SUBMITTED;
+        public string RequestStatus { get; set; }
 
         [Required(ErrorMessageResourceName = "ResxRequired", ErrorMessageResourceType = typeof(Resource))]
         public string PaymentStatus { get; set; } = OvmcPaymentStatus.PENDING;

@@ -1,0 +1,52 @@
+﻿@using OP.PORTAL.Helpers
+@inherits LayoutComponentBase
+
+<MudMenu @ref="_userMenu" Dense="true" AnchorOrigin="Origin.BottomLeft"
+         TransformOrigin="Origin.TopCenter">
+    <ActivatorContent >
+        <MudTooltip Text="@localizer["_User"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+            <MudIconButton OnClick="@ToggleMenu" Icon="@Icons.Material.Filled.ManageAccounts" Color="Color.Secondary" />
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Info" Label="@localizer["_Profile"]" Href="profile" />
+        <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" Label="@localizer["_Logout"]" OnClick="@((e) => Logout())" />
+    </ChildContent>
+</MudMenu>
+
+@code {
+    #nullable enable
+    private MudMenu? _userMenu = null;
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        isAuthenticated = await TokenHelper.IsAuthenticated();
+        if (!isAuthenticated)
+        {
+            navigator.NavigateTo($"");
+        }
+
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+
+    }
+
+    private Task ToggleMenu(MouseEventArgs e)
+    {
+        return _userMenu?.ToggleMenuAsync(e) ?? Task.CompletedTask;
+    }
+
+    public async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+    }
+}

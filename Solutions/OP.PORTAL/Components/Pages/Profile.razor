@@ -220,13 +220,13 @@
 
     private async Task Submit()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
 
         if (_form.IsValid)
         {
             bool? confirm = await Dialog.ShowMessageBoxAsync(
                 localizer["_ReviewAndConfirm"],
-                localizer["_ReviewAndConfirmMessage"],
+                "",
                 yesText: localizer["_Confirm"],
                 null,
                 cancelText: localizer["_Review"],
@@ -256,13 +256,13 @@
 
     private async Task Submit1()
     {
-        await _form1.Validate();
+        await _form1.ValidateAsync();
 
         if (_form1.IsValid)
         {
             bool? confirm = await Dialog.ShowMessageBoxAsync(
                 localizer["_ReviewAndConfirm"],
-                localizer["_ReviewAndConfirmMessage"],
+                "",
                 yesText: localizer["_Confirm"],
                 cancelText: localizer["_Review"],
                 options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });

@@ -2,7 +2,7 @@ window.openBankPayment = (paymentUrl, encRequest, accessCode) => {
     const form = document.createElement("form");
     form.method = "POST";
     form.action = paymentUrl;
-    form.target = "_blank";
+    //form.target = "_blank";
 
     const enc = document.createElement("input");
     enc.type = "hidden";

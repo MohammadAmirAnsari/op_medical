@@ -1,10 +1,10 @@
 {
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7221"
+    "BaseUrl": "https://apiovmc.omanpost.om"
   },
   "Routes": [
     {
-      "DownstreamPathTemplate": "/aisstage/{everything}",
+      "DownstreamPathTemplate": "/ais/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -12,7 +12,7 @@
           "Port": 443
         }
       ],
-      "UpstreamPathTemplate": "/api/aisstage/{everything}",
+      "UpstreamPathTemplate": "/api/ais/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "OP.Gateway.Auth",
@@ -28,11 +28,11 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7047
+          "Host": "ovmc.omanpost.om",
+          "Port": 443
         }
       ],
-      "UpstreamPathTemplate": "/api/ovmcstage/{everything}",
+      "UpstreamPathTemplate": "/api/ovmc/{everything}",
       "UpstreamHttpMethod": [ "GET", "PATCH", "PUT" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "OP.Gateway.Auth",

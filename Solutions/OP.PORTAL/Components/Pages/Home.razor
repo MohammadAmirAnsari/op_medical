@@ -108,11 +108,18 @@
                             </MudChip>
                         </MudTd>
                         <MudTd DataLabel="@localizer["_PaymentStatus"]">
-                            <MudChip T="string" Variant="Variant.Filled"
-                                Color="@RequestStatusColor.GetStatusColor(context.PaymentStatus)"
-                                Size="Size.Small">
-                                @context.PaymentStatus
-                            </MudChip>
+                            @if(context.PaymentStatus != OvmcPaymentStatus.SUCCESS && context.RequestStatus == OvmcRequestStatus.SUBMITTED){
+                                <MudChip T="string" Disabled="@isPaymentInProcess" Icon="@Icons.Material.Filled.Payments" IconColor="Color.Error" Size="Size.Small" 
+                                    Variant="Variant.Outlined" Color="Color.Error" OnClick="@(async () => await Payment(context.MolWorkPermitNo, context.PassportNo, context.GivenName, context.Id))">
+                                    @(isPaymentInProcess ? localizer["_Wait"] + " " + Counter + "s" : localizer["_Pay"])
+                                </MudChip>
+                            }else{                                
+                                <MudChip T="string" Variant="Variant.Filled"
+                                    Color="@RequestStatusColor.GetStatusColor(context.PaymentStatus)"
+                                    Size="Size.Small">
+                                    @context.PaymentStatus
+                                </MudChip>
+                            }
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -129,24 +136,24 @@
 </MudGrid>
 
 <MudDivider Class="my-4" />
+    
 <MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_ForHelpOrSupport")</MudText>
-<MudText Typo="Typo.body2">
-    @localizer.Html("_ContactUsMessage")
-</MudText>
+    <SupportData />
 
 </MudPaper>
 
-@code {
+@code {    
+    private int Counter = 60;
+    private bool isPaymentInProcess = false;
     private List<OvmcRequest> _ovmcRequests = new();
 
     protected override async Task OnInitializedAsync()
         => _ovmcRequests = await OvmcService.GetAllAsync();
-<<<<<<< HEAD
 
     private async Task<bool> Payment(string molNo, string passport, string name, int id){
         bool? confirm1 = await Dialog.ShowMessageBoxAsync(
             localizer["_ProceedToPayment"],
-            localizer["_ProceedToPaymentMessage", molNo, passport, name],
+            "",
             yesText: localizer["_PayNow"],
             noText: null,
             cancelText: localizer["_PayLater"],
@@ -179,6 +186,4 @@
             }
         return false;
     }
-=======
->>>>>>> parent of d224af8 (changes - suggested by priya)
 }

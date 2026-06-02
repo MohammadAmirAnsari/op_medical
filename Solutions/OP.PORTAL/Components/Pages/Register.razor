@@ -3,31 +3,23 @@
 
 <MudForm @ref="_form" Disabled="@_submitted">
     <MudPaper Class="ma-1 pa-4" Elevation="0">
-        <MudGrid>
-            <MudItem xs="12" md="4" Class="justify-center align-center pa-4">
-                <MudText Typo="Typo.h4" Class="mb-4">@localizer.Html("_WelcomeMessage")</MudText>
-                <MudText Typo="Typo.subtitle1" Class="mb-6">
-                    @localizer.Html("_WelcomeDetails")
-                </MudText>                                                              
-                <MudDivider Class="my-4" />  
-                <MudText Typo="Typo.subtitle1">
-                    @localizer.Html("_AlreadyHaveAccountMessage")
-                </MudText>
-                <MudButton StartIcon="@Icons.Material.Filled.EditNote" Variant="Variant.Outlined" Class="mt-3"
-                    Color="Color.Primary" Href=".">@localizer.Html("_Login")</MudButton>
-            </MudItem>
-
-            <MudItem xs="12" md="8" Class="right-side">
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" md="10" Class="right-side">
                 <MudCard Outlined="true" Elevation="2" Class="pa-4">
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_SponsorsRegistration")</MudText>
                             <MudText Typo="Typo.body1" Class="mb-2">@localizer.Html("_SponsorsRegistrationMessage")</MudText>
-                        </CardHeaderContent>
+                        </CardHeaderContent>                        
+                        <CardHeaderActions>
+                            <MudButton StartIcon="@Icons.Material.Filled.Login" Variant="Variant.Text"
+                                Color="Color.Primary" Href=".">@localizer.Html("_Login")</MudButton>
+                        </CardHeaderActions>
                     </MudCardHeader>
-                    <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">
-                        <MudGrid Spacing="1">
-                                <MudItem xs="12" sm="6"> 
+                    <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">                       
+                        <MudGrid>
+                            <MudItem xs="6">
+                                <MudPaper Class="pa-3" Elevation="2">
                                     <MudTextField 
                                         @bind-Value="model.Name" 
                                         For="@(() => model.Name)"
@@ -41,8 +33,7 @@
                                         Validation="OvmcValidator.NoArabic"
                                         OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Name)))"
                                         OnlyValidateIfDirty="true"/>
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
+
                                     <MudTextField 
                                         @bind-Value="model.NationalId" 
                                         For="@(() => model.NationalId)"
@@ -56,6 +47,7 @@
                                         Validation="OvmcValidator.OnlyNumber(6, 8)"
                                         OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.NationalId)))"
                                         OnlyValidateIfDirty="true"/>
+
                                     <MudSelect 
                                         @bind-Value="model.SponsorType" 
                                         For="@(() => model.SponsorType)"
@@ -72,8 +64,7 @@
                                             </MudSelectItem>
                                         }
                                     </MudSelect>
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
+
                                     <MudSelect 
                                         @bind-Value="model.City" 
                                         For="@(() => model.City)"
@@ -119,8 +110,7 @@
                                                 </MudButton>
                                             </MudItem>
                                     </MudGrid>
-                                </MudItem>                                                                  
-                                <MudItem xs="12" sm="6">
+                                    
                                     <MudTextField 
                                         HideHelperText="true"
                                         @bind-Value="model.Email" 
@@ -134,10 +124,9 @@
                                         Immediate="false"                                        
                                         Validation="OvmcValidator.Email"                                    
                                         OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Email)))"
-                                        OnlyValidateIfDirty="true"/>                                                         
-                                </MudItem>  
-                                 <MudItem xs="12" sm="6">
-                                     <MudTextField 
+                                        OnlyValidateIfDirty="true"/>       
+                                        
+                                    <MudTextField 
                                         InputType="@PasswordInput"
                                         @bind-Value="model.PasswordHash" 
                                         For="@(() => model.PasswordHash)"
@@ -153,8 +142,7 @@
                                         Adornment="Adornment.End" 
                                         AdornmentIcon="@PasswordInputIcon" 
                                         OnAdornmentClick="TogglePasswordVisibility"/>   
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
+                                    
                                      <MudTextField 
                                         InputType="@PasswordInput2"
                                         @bind-Value="model.ConfirmPasswordHash" 
@@ -178,7 +166,7 @@
                         <MudGrid Spacing="1">
                                 <MudItem xs="12" sm="6">
                                     <MudCheckBox Required="true" RequiredError="" @bind-Value="model.IsVerified" For="@(() => model.IsVerified)" Color="Color.Secondary">
-                                        @localizer.Html("_SponsorsRegistrationAgreeTerms")
+                                    @localizer.Html("_AgreeTo") <MudLink Href="javascript:void(0)" Class="link-custom-class" @onclick="OnLabelClick">@localizer.Html("_RequestAgreeTerms")</MudLink>
                                     </MudCheckBox>    
                                 </MudItem>
                                 <MudItem xs="12" sm="2">
@@ -188,7 +176,6 @@
                                         @bind-Value="model.VerifyOtp" 
                                         For="@(() => model.VerifyOtp)"
                                         Label="@localizer["_VerifyOtp"]"
-                                        HelperText="@localizer["_VerifyOtpHelperText"]"
                                         Placeholder="@localizer["_VerifyOtpPlaceholder"]"
                                         Variant="@(IsFirstOtpSent ? Variant.Outlined : Variant.Filled)"
                                         Dense="true" ShrinkLabel 
@@ -232,6 +219,22 @@
         _omancities = _gmRecords.Where(x => x.ParentName == "Oman" && x.MasterType == MasterTypes.CITY).ToList();
     }
 
+    
+    private void OnLabelClick()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+
+        var dialog = Dialog.ShowAsync<Terms>("OMAN POST TERMS AND CONDITIONS (OVMC)", options);
+
+    }
+
     private async Task SendOtp()
     {
         if (_phoneField.HasErrors) return;
@@ -267,13 +270,13 @@
 
     private async Task Submit()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
 
         if (_form.IsValid)
         {
             bool? confirm = await Dialog.ShowMessageBoxAsync(
                 localizer["_ReviewAndConfirm"],
-                localizer["_ReviewAndConfirmMessage"],
+                "",
                 yesText: localizer["_Confirm"],
                 cancelText: localizer["_Review"],
                 options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
@@ -287,7 +290,7 @@
                 if(rec > 0) {
                     bool? confirm1 = await Dialog.ShowMessageBoxAsync(
                         localizer["_ProceedToLogin"],
-                        localizer["_RegistrationSuccessMessage"],
+                        "",
                         yesText: localizer["_Login"],
                         cancelText: localizer["_Later"],
                         options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });

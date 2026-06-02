@@ -6,7 +6,7 @@
     <MudPopoverProvider />
     <MudDialogProvider />
     <MudSnackbarProvider />
-    
+
 @if(isAuthenticated){
     <AuthorizeView>
          <Authorized>
@@ -21,50 +21,21 @@
                 <MudMenuItem Icon="@Icons.Material.Filled.Home" Label="@localizer["_Home"]" Href="home" Style="width: fit-content; white-space: nowrap;"/>
                 <MudMenuItem Icon="@Icons.Material.Filled.PostAdd" IconColor="Color.Success" Label="@localizer["_OvmcRequest"]" Href="request"  Style="width: fit-content; white-space: nowrap;"/>
                 <MudMenuItem Icon="@Icons.Material.Filled.History" IconColor="Color.Warning" Label="@localizer["_OvmcHistory"]" Href="history"  Style="width: fit-content; white-space: nowrap;"/> 
-                <MudMenuItem Icon="@Icons.Material.Filled.MedicalInformation" IconColor="Color.Error" Label="@localizer["_OvmcAppointment"]" Href="https://omanpost.om" 
+                <MudMenuItem Icon="@Icons.Material.Filled.MedicalInformation" IconColor="Color.Error" Label="@localizer["_OvmcAppointment"]" Href="https://services.vfsglobal.com/omn/en/omc/"
                         Target="_blank" Style="width: fit-content; white-space: nowrap;"/>           
             </MudHidden>
-            <MudSpacer />      
-            <MudMenu Dense="true" AnchorOrigin="Origin.BottomCenter"
-                     TransformOrigin="Origin.TopCenter">
-                <ActivatorContent Context="Lang">
-                    <MudTooltip Text="@localizer["_Language"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
-                        <MudIconButton Icon="@Icons.Material.Filled.GTranslate" Color="Color.Secondary"/> 
-                    </MudTooltip> 
-                </ActivatorContent>
-                <ChildContent>    
-                    <MudMenuItem OnClick="@((e) => SetCulture("en-US"))">
-                        <ActivatorContent Context="ItemEn">
-                            <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
-                                 height="12" class="mr-2" />
-                           @localizer["_LanguageEnglish"]
-                        </ActivatorContent>
-                    </MudMenuItem>
-                    <MudMenuItem OnClick="@((e) => SetCulture("ar-OM"))">
-                        <ActivatorContent Context="ItemAr">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
-                                 height="12" class="mr-2" />
-                           @localizer["_LanguageArabic"]
-                        </ActivatorContent>
-                    </MudMenuItem>
-                </ChildContent>
-            </MudMenu>
-            <MudTooltip Text="@localizer["_Help"]" Color="Color.Warning" Placement="Placement.Bottom" Arrow="true">
-                <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Warning" Href="help" Target="_blank"/> 
-            </MudTooltip>
-            <MudMenu Dense="true" AnchorOrigin="Origin.BottomLeft"
-                     TransformOrigin="Origin.TopCenter"> 
-                <ActivatorContent Context="UserContext">
-                    <MudTooltip Text="@localizer["_User"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
-                        <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" Color="Color.Secondary"/> 
-                    </MudTooltip> 
-                </ActivatorContent>
-                <ChildContent>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Info" Label="@localizer["_Profile"]" Href="profile" />
-                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" Label="@localizer["_Logout"]" OnClick="@((e) => Logout())"/>            
-                </ChildContent>
-            </MudMenu>
-            @* <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/> *@            
+            <MudSpacer />                    
+            <MudItem>
+                <MudButton Color="Color.Success" Target="_blank" Href="@localizer["_HOWTOAPPLYFILE"]">@localizer["_HOWTOAPPLY"]</MudButton>
+            </MudItem>
+            <LangMenu />
+            <MudItem>
+                <MudIconButton Icon="@Icons.Material.Filled.Help"  Color="Color.Warning" Href="help" Target="_blank"/> 
+            </MudItem>
+                        
+            <UserMenu />
+            @* <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/> *@  
+            
         </MudAppBar>        
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
@@ -91,16 +62,18 @@
     <span class="dismiss">🗙</span>
 </div>
 
-@code {
+    @code {
+    #nullable enable
     private bool isAuthenticated = false;
     private bool _rightToLeft = false;
     private bool _drawerOpen = false;
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
 
+
     protected override async Task OnInitializedAsync()
     {
-        base.OnInitializedAsync();
+        await base.OnInitializedAsync();
 
         _theme = new()
         {
@@ -112,7 +85,6 @@
             }
         };
 
-        _culture = CultureInfo.CurrentCulture;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -121,37 +93,16 @@
         if (!isAuthenticated)
         {
             navigator.NavigateTo($"");
-        }        
+        }
 
         if (firstRender)
         {
             StateHasChanged();
         }
-        
+
     }
 
-    private CultureInfo _culture {
-        get {
-            return CultureInfo.CurrentCulture;
-        }
-        set {
-            if (value != null && value != CultureInfo.CurrentCulture)
-            {
-                var uri = new Uri(navigator.Uri)
-                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-                var cultureEscape = Uri.EscapeDataString(value.Name);
-                var uriEscape = Uri.EscapeDataString(uri);
 
-               navigator.NavigateTo($"Culture/Set?culture={cultureEscape}&redirectUri={uriEscape}", forceLoad: true);
-            }
-        }
-    }
-
-    void SetCulture(string culture)
-    {
-        if(_culture.Name != culture)
-            _culture = new CultureInfo(culture);
-    }
 
     private void DrawerToggle()
     {

@@ -16,7 +16,9 @@ namespace OP.GATEWAY.Data
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<GatewayDbContext>();
-            string? connectionString = config.GetConnectionString("MySqlLogDb");
+            string connectionString = config.GetConnectionString("MySqlLogDb")
+                ?? throw new InvalidOperationException("Connection string 'MySqlLogDb' not found. Ensure appsettings.json contains it and SetBasePath is correct.");
+
             optionsBuilder.UseMySQL(connectionString);
             return new GatewayDbContext(optionsBuilder.Options);
         }

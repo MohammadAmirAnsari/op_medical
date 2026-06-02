@@ -20,10 +20,11 @@ namespace OP.PORTAL
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'MySqlLogDb' not found. Ensure appsettings.json contains it and SetBasePath is correct.");
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
-                options.UseMySQL(connectionString ));
+                options.UseMySQL(connectionString));
 
             builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiAuthSettings"));
 
@@ -34,6 +35,18 @@ namespace OP.PORTAL
             {
                 client.BaseAddress = new Uri("https://nominatim.openstreetmap.org/");
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("OP-Portal/1.0 (contact@yourdomain.com)");
+            });
+
+            builder.Services.AddHttpClient("RestCountriesClient", client =>
+            {
+                client.BaseAddress = new Uri("https://restcountries.com/v3.1/");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("OP-Portal/1.0 (contact@omanpost.om)");
+            });
+
+            builder.Services.AddHttpClient("CountriesNowClient", client =>
+            {
+                client.BaseAddress = new Uri("https://countriesnow.space/api/v0.1/");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("OP-Portal/1.0 (contact@omanpost.om)");
             });
 
             builder.Services.AddHttpContextAccessor();            
@@ -71,7 +84,11 @@ namespace OP.PORTAL
             });
 
             // Add services to the container.
-            builder.Services.AddRazorComponents()
+            //builder.Services.AddRazorComponents()
+            //    .AddInteractiveServerComponents();
+
+            builder.Services.AddRazorComponents(options =>
+                options.DetailedErrors = builder.Environment.IsDevelopment())
                 .AddInteractiveServerComponents();
 
             builder.Services.AddScoped<OvmcPaymentService>();
@@ -84,6 +101,8 @@ namespace OP.PORTAL
             builder.Services.AddScoped<ISmsHelper, SmsHelper>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<GoogleMapService>();
+            builder.Services.AddScoped<RestCountriesService>();
+            builder.Services.AddScoped<CountriesNowServices>();
             builder.Services.AddScoped<AuthenticationStateProvider, AuthStateHelper>();
             builder.Services.AddScoped<BarcodeService>();
 

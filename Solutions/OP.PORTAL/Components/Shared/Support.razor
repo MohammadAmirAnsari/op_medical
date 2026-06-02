@@ -1,0 +1,14 @@
+﻿<MudDialog>
+	<DialogContent>
+		<SupportData />
+	</DialogContent>
+	<DialogActions>
+		<MudButton Color="Color.Primary" OnClick="Cancel">@localizer["_Close"]</MudButton>
+	</DialogActions>
+</MudDialog>
+
+@code {
+	[CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+	void Cancel() => MudDialog.Cancel();
+
+}

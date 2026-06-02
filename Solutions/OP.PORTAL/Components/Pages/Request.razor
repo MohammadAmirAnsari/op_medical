@@ -9,28 +9,26 @@
                 <MudText Typo="Typo.body1" Class="mb-2">@localizer.Html("_OvmcRequestDetails")</MudText>
             </CardHeaderContent>
         </MudCardHeader>
-        <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">
-            <MudGrid Spacing="1">
-                    <MudItem xs="12" sm="4">
+        <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Class="ma-1">
+            <MudStack StretchItems="StretchItems.All" Wrap="Wrap.Wrap" Row="true" AlignItems="AlignItems.Start">
+                <MudPaper Class="pa-3" Elevation="2">
                         <MudTextField 
                                 Autofocus="true"
-                                HideHelperText="false"
                                 @bind-Value="model.MolWorkPermitNo" 
                                 For="@(() => model.MolWorkPermitNo)"
                                 Label="@localizer["_MolWorkPermitNo"]"
                                 HelperText="@localizer["_MolWorkPermitNoHelperText"]"
                                 Placeholder="@localizer["_MolWorkPermitNoPlaceholder"]"
                                 Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
+                                ShrinkLabel 
                                 Margin="Margin.Dense"
-                                Class="text-uppercase"
+                                Class="text-uppercase mb-3"
                                 Immediate="false"
                                 Validation="OvmcValidator.OnlyNumber(8, 8)"
                                 OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.MolWorkPermitNo)))"
                                 OnlyValidateIfDirty="true"/>
-                    </MudItem>
-                     <MudItem xs="12" sm="4">
-                        <MudSelect
+
+                       <MudSelect
                                 Value="model.Country"
                                 ValueChanged="@(async (string v) => await OnCountryChanged(v))"
                                 For="@(() => model.Country)"
@@ -41,36 +39,38 @@
                                 AdornmentColor="Color.Primary"
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
+                                     Class="text-uppercase mb-3"
                                 Margin="Margin.Dense">
                                 @foreach (var item in _countries)
                                 {
-                                    <MudSelectItem Value="@item.Name">
-                                        @item.Name
+                                    <MudSelectItem Value="@item">
+                                        @item
                                     </MudSelectItem>
                                 }
                             </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudSelect 
+                                     
+                    <MudAutocomplete T="string" SearchFunc="@cityFilter"
                                 @bind-Value="model.City" 
                                 For="@(() => model.City)"
                                 Label="@localizer["_City"]"
                                 HelperText="@localizer["_CityHelperText"]"
                                 Placeholder="@localizer["_CityPlaceholder"]"
-                                AdornmentIcon="@Icons.Material.Filled.LocationOn"
+                                     AdornmentIcon="@Icons.Material.Filled.Search"
                                 AdornmentColor="Color.Primary"
                                 Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
-                                Margin="Margin.Dense">
-                                @foreach (var item in _cities)
-                                {
-                                    <MudSelectItem Value="@item.Name">
-                                        @item.Name
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
+                                Dense="true" ShrinkLabel
+                                Clearable="true"
+                                Modal="true"
+                                Class="text-uppercase mb-3" 
+                               Margin="Margin.Dense">
+                        @foreach (var item in _cities)
+                        {
+                            <MudSelectItem Value="@item">
+                                @item
+                            </MudSelectItem>
+                        }
+                    </MudAutocomplete>
+
                         <MudSelect 
                                 @bind-Value="model.VisaType" 
                                 For="@(() => model.VisaType)"
@@ -81,6 +81,7 @@
                                 AdornmentColor="Color.Primary"
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
+                                Class="text-uppercase mb-3"
                                 Margin="Margin.Dense">
                                 @foreach (var item in _visatypes)
                                 {
@@ -89,41 +90,38 @@
                                     </MudSelectItem>
                                 }
                             </MudSelect>  
-                    </MudItem>            
-                    <MudItem xs="12" sm="4">
+
                         <MudTextField 
                                 @bind-Value="model.PassportNo" 
                                 For="@(() => model.PassportNo)"
                                 Label="@localizer["_PassportNo"]"
                                 HelperText="@localizer["_PassportNoHelperText"]"
                                 Placeholder="@localizer["_PassportNoPlaceholder"]"
-                                Variant="@(OvmcPaymentStatus.IsPaymentSuccess(model.PaymentStatus) ? Variant.Filled : Variant.Outlined)"
-                                Dense="true" ShrinkLabel 
+                                  Variant="@((new[]{OvmcRequestStatus.SUBMITTED,OvmcRequestStatus.INPROCESS,OvmcRequestStatus.COMPLETED}.Contains(model.RequestStatus)) ? Variant.Filled : Variant.Outlined)"
+                                ShrinkLabel 
                                 Margin="Margin.Dense"
-                                Readonly="@OvmcPaymentStatus.IsPaymentSuccess(model.PaymentStatus)"
+                                  Readonly="@((new[]{OvmcRequestStatus.SUBMITTED,OvmcRequestStatus.INPROCESS,OvmcRequestStatus.COMPLETED}.Contains(model.RequestStatus)))"
                                 Adornment="Adornment.Start"
-                                AdornmentIcon="@(OvmcPaymentStatus.IsPaymentSuccess(model.PaymentStatus) ? Icons.Material.Filled.Lock : "")"
-                                AdornmentColor="@(OvmcPaymentStatus.IsPaymentSuccess(model.PaymentStatus) ? Color.Error : Color.Primary)"
-                                Immediate="false"                                
-                                Validation="OvmcValidator.NoArabic"
+                                  AdornmentIcon="@((new[]{OvmcRequestStatus.SUBMITTED,OvmcRequestStatus.INPROCESS,OvmcRequestStatus.COMPLETED}.Contains(model.RequestStatus)) ? Icons.Material.Filled.Lock : "")"
+                                  AdornmentColor="@((new[]{OvmcRequestStatus.SUBMITTED,OvmcRequestStatus.INPROCESS,OvmcRequestStatus.COMPLETED}.Contains(model.RequestStatus)) ? Color.Error : Color.Primary)"
+                                Immediate="false"                                        
+                                Validation="@(new Func<string, string>(OvmcValidator.NoArabic))"
                                 OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.PassportNo)))"
-<<<<<<< HEAD
                                 OnlyValidateIfDirty="true"/>    
                  </MudPaper>
                 <MudPaper Class="pa-3" Elevation="2">
                     <MudTextField 
-                                HideHelperText="false"
                                 @bind-Value="model.GivenName" 
                                 For="@(() => model.GivenName)"
                                 Label="@localizer["_GivenName"]"
                                 HelperText="@localizer["_GivenNameHelperText"]"
                                 Placeholder="@localizer["_GivenNamePlaceholder"]"
                                 Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
+                                ShrinkLabel 
                                 Margin="Margin.Dense"
                                 Immediate="false"  
                                 Class="text-uppercase mb-5"
-                                Validation="OvmcValidator.NoArabic"
+                                Validation="@(new Func<string, string>(OvmcValidator.NoArabic))"
                                 OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.GivenName)))"
                                 OnlyValidateIfDirty="true" />
                     
@@ -134,11 +132,11 @@
                             HelperText="@localizer["_SurnameHelperText"]"
                             Placeholder="@localizer["_SurnamePlaceholder"]"
                             Variant="Variant.Outlined"
-                            Dense="true" ShrinkLabel 
+                            ShrinkLabel 
                             Margin="Margin.Dense"
                             Immediate="false"     
                             Class="text-uppercase mb-3"
-                            Validation="OvmcValidator.NoArabic"
+                            Validation="@(new Func<string, string>(OvmcValidator.NoArabic))"
                             OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Surname)))"
                             OnlyValidateIfDirty="true" />
 
@@ -149,9 +147,9 @@
                                    Placeholder="@localizer["_PassportIssueDatePlaceholder"]"
                                    Variant="Variant.Outlined"
                                    DateFormat="@OvmcFormat.DATEFORMAT"
-                                   Dense="true" ShrinkLabel
+                                   ShrinkLabel
                                    OpenTo="OpenTo.Year"
-                                   DatePickerMode="DatePickerMode.Dialog"
+                                   Validation="@(new Func<DateTime?, string>(ValidateIssueDate))"
                                    MaxDate="DateTime.Today.AddDays(-1)"
                                    Margin="Margin.Dense" />
 
@@ -162,20 +160,14 @@
                                 Placeholder="@localizer["_PassportExpiryDatePlaceholder"]"
                                 Variant="Variant.Outlined"
                                 DateFormat="@OvmcFormat.DATEFORMAT"
-                                Dense="true" ShrinkLabel 
+                                ShrinkLabel 
                                 OpenTo="OpenTo.Year"
-                                DatePickerMode="DatePickerMode.Dialog"
+                                   Validation="@(new Func<DateTime?, string>(ValidateExpiryDate))"
                                 Class="text-uppercase mb-3"
                                 MinDate="DateTime.Today.AddDays(180)"
                                 Margin="Margin.Dense"/>
 
                     <MudAutocomplete T="string"
-=======
-                                OnlyValidateIfDirty="true"/>      
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudAutocomplete T="string"
->>>>>>> parent of d224af8 (changes - suggested by priya)
                                 @bind-Value="model.PassportIssuePlace" 
                                 For="@(() => model.PassportIssuePlace)"
                                 Label="@localizer["_PassportIssuePlace"]"
@@ -186,82 +178,21 @@
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
                                 Margin="Margin.Dense"
-                                Searchable="true"
                                 Clearable="true"
                                 Modal="true" 
                                 ShowProgressIndicator="true"
                                 MinCharacters="3"
                                 DebounceInterval="1000"
+                                Class="text-uppercase mb-3"
                                 ResetValueOnEmptyText="true"
                                 OpenOnFocus="false"
                                 SearchFunc="SearchPlacesAsync">
-<<<<<<< HEAD
                     </MudAutocomplete>
 
                      
                 </MudPaper>
                 <MudPaper Class="pa-3" Elevation="2">
                     <MudDatePicker 
-=======
-                        </MudAutocomplete>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudDatePicker 
-                                @bind-Date="model.PassportIssueDate"  
-                                For="@(() => model.PassportIssueDate)"
-                                Label="@localizer["_PassportIssueDate"]"
-                                HelperText="@localizer["_PassportIssueDateHelperText"]"
-                                Placeholder="@localizer["_PassportIssueDatePlaceholder"]"
-                                Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
-                                MaxDate="DateTime.Today.AddDays(-1)"
-                                Margin="Margin.Dense"/>   
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudDatePicker  
-                                @bind-Date="model.PassportExpiryDate" 
-                                For="@(() => model.PassportExpiryDate)"
-                                Label="@localizer["_PassportExpiryDate"]"
-                                HelperText="@localizer["_PassportExpiryDateHelperText"]"
-                                Placeholder="@localizer["_PassportExpiryDatePlaceholder"]"
-                                Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
-                                MinDate="DateTime.Today"
-                                Margin="Margin.Dense"/>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField 
-                                @bind-Value="model.GivenName" 
-                                For="@(() => model.GivenName)"
-                                Label="@localizer["_GivenName"]"
-                                HelperText="@localizer["_GivenNameHelperText"]"
-                                Placeholder="@localizer["_GivenNamePlaceholder"]"
-                                Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
-                                Margin="Margin.Dense"
-                                Immediate="false"                                                                
-                                Validation="OvmcValidator.NoArabic"
-                                OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.GivenName)))"
-                                OnlyValidateIfDirty="true" />
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField 
-                                @bind-Value="model.Surname" 
-                                For="@(() => model.Surname)"
-                                Label="@localizer["_Surname"]"
-                                HelperText="@localizer["_SurnameHelperText"]"
-                                Placeholder="@localizer["_SurnamePlaceholder"]"
-                                Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
-                                Margin="Margin.Dense"
-                                Immediate="false"                                                                
-                                Validation="OvmcValidator.NoArabic"
-                                OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Surname)))"
-                                OnlyValidateIfDirty="true" />
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudDatePicker 
->>>>>>> parent of d224af8 (changes - suggested by priya)
                                 @bind-Date="model.DateOfBirth" 
                                 For="@(() => model.DateOfBirth)"
                                 Label="@localizer["_DateOfBirth"]"
@@ -270,19 +201,15 @@
                                 Variant="Variant.Outlined"
                                 Editable="true"
                                 DateFormat="@OvmcFormat.DATEFORMAT"
-                                Dense="true" ShrinkLabel 
-<<<<<<< HEAD
+                                ShrinkLabel 
                                 OpenTo="OpenTo.Year"
-                                DatePickerMode="DatePickerMode.Dialog"
+                                Validation="@(new Func<DateTime?, string>(ValidateBirthDate))"
                                 Class="text-uppercase mb-3"
                                 MaxDate="DateTime.Today.AddYears(-18)"
-=======
-                                MaxDate="DateTime.Today.AddDays(-1)"
->>>>>>> parent of d224af8 (changes - suggested by priya)
+                                MinDate="DateTime.Today.AddYears(-60)"
                                 Margin="Margin.Dense"/>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudSelect 
+
+                    <MudSelect 
                                 @bind-Value="model.Gender" 
                                 For="@(() => model.Gender)"
                                 Label="@localizer["_Gender"]"
@@ -292,6 +219,7 @@
                                 AdornmentColor="Color.Primary"
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
+                                Class="text-uppercase mb-3"
                                 Margin="Margin.Dense">
                                 @foreach (var item in _genders)
                                 {
@@ -300,9 +228,8 @@
                                     </MudSelectItem>
                                 }
                             </MudSelect>  
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudSelect 
+
+                    <MudSelect 
                                 @bind-Value="model.MaritalStatus" 
                                 For="@(() => model.MaritalStatus)"
                                 Label="@localizer["_MaritalStatus"]"
@@ -312,6 +239,7 @@
                                 AdornmentColor="Color.Primary"
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
+                                Class="text-uppercase mb-3"
                                 Margin="Margin.Dense">
                                 @foreach (var item in _maritalstatus)
                                 {
@@ -320,20 +248,19 @@
                                     </MudSelectItem>
                                 }
                             </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField 
+
+                    <MudTextField 
                                 @bind-Value="model.Email" 
                                 For="@(() => model.Email)"
                                 Label="@localizer["_ApplicantEmail"]"
                                 HelperText="@localizer["_EmailHelperText"]"
                                 Placeholder="@localizer["_EmailPlaceholder"]"
                                 Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
+                                ShrinkLabel 
                                 Margin="Margin.Dense"
                                 Immediate="false"    
                                 Class="text-uppercase mb-3"                         
-                                Validation="OvmcValidator.Email"
+                                Validation="@(new Func<string, string>(OvmcValidator.Email))"
                                 OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Email)))"
                                 OnlyValidateIfDirty="true"/>
 
@@ -344,22 +271,23 @@
                                 HelperText="@localizer["_PhoneNoHelperText"]"
                                 Placeholder="@localizer["_PhoneNoPlaceholder"]"
                                 Variant="Variant.Outlined"
-                                Dense="true" ShrinkLabel 
+                                ShrinkLabel 
                                 Margin="Margin.Dense"
                                 Immediate="false"                                                                                                
-                                Validation="OvmcValidator.NoArabic"
+                                Validation="@(new Func<string, string>(OvmcValidator.NoArabic))"
                                 OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.PhoneNo)))"
                                 OnlyValidateIfDirty="true"/>
-                    </MudItem>
-            </MudGrid>
+                </MudPaper>
+            </MudStack>
         </MudCardContent>
         <MudCardActions>
             <MudGrid Spacing="1">
-                    <MudItem xs="12" sm="8">
+                    <MudItem xs="12" sm="4">
                         <MudCheckBox Required="true" RequiredError="" @bind-Value="model.IsTnCAccepted" For="@(() => model.IsTnCAccepted)" Color="Color.Secondary">
-                            @localizer.Html("_RequestAgreeTerms")
-                        </MudCheckBox>    
-                    </MudItem>      
+                        @localizer.Html("_AgreeTo") <MudLink Href="javascript:void(0)" Class="link-custom-class" @onclick="OnLabelClick">@localizer.Html("_RequestAgreeTerms")</MudLink>
+                        </MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12" sm="3"></MudItem>
                     <MudItem xs="12" sm="4">
                         <MudButton StartIcon="@Icons.Material.Filled.Payments" Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" Class="ml-1 mr-1" OnClick="Submit">@localizer.Html("_Proceed")</MudButton>
                         @if(!string.IsNullOrEmpty(encidt)){
@@ -375,6 +303,10 @@
     .my-custom-class {
         backdrop-filter: blur(1px);
     }
+    .link-custom-class {
+        color: var(--mud-palette-primary);
+        cursor: pointer;
+    }
 </style>
 @code {
     private MudForm _form;
@@ -386,8 +318,55 @@
     private List<GeneralMaster> _genders = new();
     private List<GeneralMaster> _visatypes = new();
     private List<GeneralMaster> _maritalstatus = new();
-    private List<GeneralMaster> _countries = new();
-    private List<GeneralMaster> _cities = new();
+    private List<string> _countries = new();
+    private List<string> _cities = new();
+
+    private string ValidateIssueDate(DateTime? date)
+    {
+        if (date != null && date > DateTime.Today.AddDays(-1))
+            return "Issue Date cannot be in the future";
+        return null; // No error
+    }
+
+    private void OnLabelClick()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+
+        var dialog = Dialog.ShowAsync<Terms>("OMAN POST TERMS AND CONDITIONS (OVMC)", options);
+
+    }
+
+
+    private async Task<IEnumerable<string>> cityFilter(string value, CancellationToken token)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+
+
+        // if text is null or empty, don't return values (drop-down will not open)
+        if (string.IsNullOrEmpty(value))
+            return new string[0];
+        return _cities.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+    private string ValidateExpiryDate(DateTime? date)
+    {
+        if (date != null && date < DateTime.Today.AddDays(180))
+            return "Expiry Date cannot be less than 6 months from today";
+        return null; // No error
+    }
+
+    private string ValidateBirthDate(DateTime? date)
+    {
+        if (date != null && (date > DateTime.Today.AddYears(-18) || date < DateTime.Today.AddYears(-60)))
+            return "You must be between 18 and 60 years old";
+        return null; // No error
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -395,16 +374,16 @@
         _genders = _gmRecords.Where(x => x.MasterType == MasterTypes.GENDER).ToList();
         _visatypes = _gmRecords.Where(x => x.MasterType == MasterTypes.VISATYPE).ToList();
         _maritalstatus = _gmRecords.Where(x => x.MasterType == MasterTypes.MARITALSTATUS).ToList();
-        _countries = _gmRecords.Where(x => x.MasterType == MasterTypes.COUNTRY).ToList();
-        
-       if(!string.IsNullOrEmpty(encidt)){
+        _countries = _gmRecords.Where(x => x.MasterType == MasterTypes.COUNTRY).Select(c=>c.Name).ToList();
+
+        if(!string.IsNullOrEmpty(encidt)){
             OvmcRequest? editModel = await OvmcService.GetAsync(encidt);
             if(editModel != null){
                 model = editModel;
                 model.IsTnCAccepted = false;
-                _cities = _gmRecords.Where(x => x.MasterType == MasterTypes.CITY && x.ParentName != null && x.ParentName == model.Country).ToList();
+                _cities = _gmRecords.Where(x => x.MasterType == MasterTypes.CITY && x.ParentName != null && x.ParentName == model.Country).Select(c => c.Name).ToList();
             }
-       }
+        }
     }
 
     public async Task OnCountryChanged(string countryName)
@@ -414,7 +393,7 @@
         _cities.Clear();
 
         if (countryName != null)
-            _cities = _gmRecords.Where(x => x.MasterType == MasterTypes.CITY && x.ParentName != null && x.ParentName == countryName).ToList();
+            _cities = _gmRecords.Where(x => x.MasterType == MasterTypes.CITY && x.ParentName != null && x.ParentName == countryName).Select(c => c.Name).ToList();
 
         StateHasChanged();
     }
@@ -424,15 +403,25 @@
         return await LocationService.SearchPlacesAsync(q);
     }
 
+    public async Task<IEnumerable<string>> SearchCountryCitesAsync(string q, CancellationToken token)
+    {
+        return await CountriesNowService.GetCountryCitiesAsync(q);
+    }
+
+    public async Task<IEnumerable<string>> SearchCountryAsync(string q, CancellationToken token)
+    {
+        return await CountriesNowService.GetCountriesAsync();
+    }
+
     private async Task Submit()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
 
         if (_form.IsValid)
         {
             bool? confirm = await Dialog.ShowMessageBoxAsync(
                 localizer["_ReviewAndConfirm"],
-                localizer["_ReviewAndConfirmMessage"],
+                "",
                 yesText: localizer["_Confirm"],
                 cancelText: localizer["_Review"],
                 options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
@@ -441,13 +430,17 @@
             {
                 _submitted = true;   // 🔒 disables form
                 StateHasChanged();
+                if (model.Id == 0)
+                {
+                    model.RequestStatus = OvmcRequestStatus.SUBMITTED;
+                }
 
                 int rec = await OvmcService.AddAsync(model);
                 if(rec > 0) {
                     if(model.PaymentStatus != OvmcPaymentStatus.SUCCESS){                        
                         bool? confirm1 = await Dialog.ShowMessageBoxAsync(
                             localizer["_ProceedToPayment"],
-                            localizer["_ProceedToPaymentMessage", model.MolWorkPermitNo, model.PassportNo, model.GivenName],
+                            "",
                             yesText: localizer["_PayNow"],
                             cancelText: localizer["_PayLater"],
                             options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
@@ -506,7 +499,7 @@
             if(editModel != null){
                 model = editModel;
                 model.IsTnCAccepted = false;
-                _cities = _gmRecords.Where(x => x.MasterType == MasterTypes.CITY && x.ParentName != null && x.ParentName == model.Country).ToList();
+                _cities = await CountriesNowService.GetCountryCitiesAsync(model.Country);
             }
        }
     }

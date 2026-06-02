@@ -1,0 +1,66 @@
+﻿<MudMenu @ref="_languageMenu" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                     TransformOrigin="Origin.TopCenter">
+                <ActivatorContent >
+                    <MudTooltip Text="@localizer["_Language"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+                        <MudIconButton OnClick="@ToggleMenu" Icon="@Icons.Material.Filled.GTranslate" Color="Color.Secondary" />
+                    </MudTooltip> 
+
+                </ActivatorContent>
+                <ChildContent>    
+                    <MudMenuItem OnClick="@((e) => SetCulture("en-US"))">
+                        <ActivatorContent Context="ItemEn">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
+                                 height="12" class="mr-2" />
+                           @localizer["_LanguageEnglish"]
+                        </ActivatorContent>
+                    </MudMenuItem>
+                    <MudMenuItem OnClick="@((e) => SetCulture("ar-OM"))">
+                        <ActivatorContent Context="ItemAr">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
+                                 height="12" class="mr-2" />
+                           @localizer["_LanguageArabic"]
+                        </ActivatorContent>
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+
+@code {
+#nullable enable
+    private MudMenu? _languageMenu = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _culture = CultureInfo.CurrentCulture;
+    }
+
+    private async Task ToggleMenu(MouseEventArgs e)
+    {
+        await _languageMenu?.ToggleMenuAsync(e);
+    }
+
+    private CultureInfo _culture
+    {
+        get
+        {
+            return CultureInfo.CurrentCulture;
+        }
+        set
+        {
+            if (value != null && value != CultureInfo.CurrentCulture)
+            {
+                var uri = new Uri(navigator.Uri)
+                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscape = Uri.EscapeDataString(value.Name);
+                var uriEscape = Uri.EscapeDataString(uri);
+
+                navigator.NavigateTo($"Culture/Set?culture={cultureEscape}&redirectUri={uriEscape}", forceLoad: true);
+            }
+        }
+    }
+
+    void SetCulture(string culture)
+    {
+        if (_culture.Name != culture)
+            _culture = new CultureInfo(culture);
+    }
+}

@@ -20,6 +20,7 @@
 @using OP.PORTAL.Locales
 @using OP.PORTAL.Models
 @using OP.PORTAL.Services
+@using OP.PORTAL.Data
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 
 @inject IJSRuntime jsRuntime
@@ -29,6 +30,8 @@
 
 @inject AuthService AuthService
 @inject GoogleMapService LocationService
+@inject RestCountriesService RestCountriesService
+@inject CountriesNowServices CountriesNowService
 @inject ISponsorService SponsorService
 @inject IOvmcRequestService OvmcService
 @inject IGeneralMasterService GeneralMasterService
@@ -41,3 +44,4 @@
 @inject ISmsHelper SmsHelper
 @inject AesEncryptionHelper AesHelper
 @inject AuthenticationStateProvider AuthStateProvider
+@inject AppDbContext db

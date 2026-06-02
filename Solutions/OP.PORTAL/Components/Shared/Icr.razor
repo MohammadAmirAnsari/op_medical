@@ -1,0 +1,103 @@
+﻿<MudDialog >
+    <DialogContent>
+        <div style="border: 1px solid lightgray; padding: 5px;" id="printSection">
+            <MudGrid Spacing="1">
+                <MudItem xs="12" sm="4"><MudImage Src="ovmc_logo.png" Width="250" Alt="Oman Visa and Medical Center" Elevation="0" Class="ml-3 mr-5 rounded-lg"></MudImage></MudItem>
+                <MudItem xs="12" sm="4" style="text-align:center;">
+                    <h1 style="text-decoration:underline">Tax Invoice</h1><br />
+                    <span>Oman Post SAOC</span><br />
+                    <span>Cargo Building, Old Airport</span><br />
+                    <span>VAT Registration number: OM1200090879</span>
+                </MudItem>
+            </MudGrid><br/>
+
+            <MudGrid Spacing="1">
+                <MudItem xs="12" sm="6"><span style="font-weight:bold;">Name:</span> @SelectedOvmcRequest.GivenName</MudItem>
+                    <MudItem xs="12" sm="6"><span style="font-weight:bold;">INVOICE NO:</span> @SelectedOvmcRequest.OvmcUrnNumber</MudItem>
+                    <MudItem xs="12" sm="6"><span style="font-weight:bold;">Contact number:</span> @SelectedOvmcRequest.PhoneNo</MudItem>
+                    <MudItem xs="12" sm="6"><span style="font-weight:bold;">DATE:</span> @SelectedOvmcRequest.CreatedDate.ToString(OvmcFormat.DATEFORMAT)</MudItem>
+                    <MudItem xs="12" sm="6"><span style="font-weight:bold;">Email ID:</span> @SelectedOvmcRequest.Email</MudItem>
+                    <MudItem xs="12" sm="6"></MudItem>
+            </MudGrid>
+            <br/>
+            <table class="border-solid border-2" style="border-collapse: collapse;" border="1" cellpadding="0" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th class="border-solid border-2">Sr. No.</th>
+                        <th class="border-solid border-2">Service Description</th>
+                        <th class="border-solid border-2">Quantity</th>
+                        <th class="border-solid border-2">Unit Price</th>
+                        <th class="border-solid border-2">Amount Excl. VAT</th>
+                        <th class="border-solid border-2">Vat Rate</th>
+                        <th class="border-solid border-2">VAT Amount</th>
+                        <th class="border-solid border-2">Amount Incl. VAT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border-solid border-2" align="center">1</td>
+                        <td class="border-solid border-2">Service Fee<br /><br /></td>
+                        <td class="border-solid border-2" align="center">1</td>
+                        <td class="border-solid border-2" align="center">@((((float)payment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</td>
+                        <td class="border-solid border-2" align="center">@((((float)payment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</td>
+                        <td class="border-solid border-2" align="center">0%</td>
+                        <td class="border-solid border-2" align="center">0</td>
+                        <td class="border-solid border-2" align="center">@((((float)payment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2" class="border-solid border-2" align="center">TOTAL(USD)</th>
+                        <th class ="border-solid border-2" align="center"></th>
+                        <th class="border-solid border-2" align="center"></th>
+                        <th class="border-solid border-2" align="center">@((((float)payment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</th>
+                        <th class="border-solid border-2" align="center"></th>
+                        <th class="border-solid border-2" align="center">0</th>
+                        <th class="border-solid border-2" align="center">@((((float)payment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</th>
+                    </tr>
+                </tfoot>
+            </table>
+            <br />
+            <br />
+            <h3>Terms & Conditions</h3>
+            <span>All payments made are non-refundable. </span><br />
+            <span>Services are being rendered outside the Sultanate of Oman.</span><br />
+            <span>
+                For further information/disclaimer/track your application status, Please visit www.ovmc.omanpost.om
+            </span><br />
+            <br/>
+        </div>
+    </DialogContent>
+    <DialogActions >
+        <MudGrid>
+            <MudItem xs="12" sm="5"></MudItem>
+            <MudItem xs="12" sm="2" >
+                <MudButton Class="d-flex align-center justify-center" Color="Color.Primary" OnClick="Print">@localizer["_Print"]</MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="4"></MudItem>
+        </MudGrid>
+        
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public OvmcPayment payment { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public OvmcRequest SelectedOvmcRequest { get; set; }
+
+    protected override void OnInitialized()
+    {
+        payment = (from Payments in db.OvmcPayments
+                 where Payments.RequestId == SelectedOvmcRequest.Id
+                 select Payments).FirstOrDefault();
+
+
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Print()
+    {
+        await jsRuntime.InvokeVoidAsync("printHtml", "printSection");
+    }
+}

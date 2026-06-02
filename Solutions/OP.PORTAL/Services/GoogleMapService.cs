@@ -40,5 +40,25 @@
             }
             return new();
         }
+
+        public async Task<List<string>> SearchCountryCitesAsync(string q, string country)
+        {
+            if (!string.IsNullOrEmpty(q) && q.Length > 2)
+            {
+                var url = $"search?q={Uri.EscapeDataString(q)}&countrycodes={country}&format=json&addressdetails=1&accept-language=en";
+
+                var result = await _http.GetFromJsonAsync<List<NominatimDto>>(url);
+
+                return result?
+                    .Where(l => l.addresstype.Equals("city"))
+                    .Select(x => x.address.city)
+                    .Distinct()
+                    .Take(10)
+                    .ToList() ?? new();
+            }
+            return new();
+        }
     }
+
+    
 }

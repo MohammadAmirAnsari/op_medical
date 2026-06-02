@@ -3,14 +3,6 @@
 
 
 <MudPaper Class="pa-4" Elevation="0">
-    @if (isPaymentInProcess)
-    {
-        <MudAlert Severity="Severity.Info" Class="mb-2">
-            @localizer.Html("_PaymentInProcessMessage")
-            <MudLink OnClick="ResetPaymentProcess" Href="history" Underline="Underline.Always">@localizer["_Refresh"]</MudLink>.
-        </MudAlert>
-    }
-
     <MudTable Items="@_ovmcRequests.OrderByDescending(d => d.Id)" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Bordered="true" Striped="true"
         Filter="new Func<OvmcRequest,bool>(FilterFunc)">
         <ToolBarContent>
@@ -34,7 +26,7 @@
             <col />
         </ColGroup>
         <HeaderContent>
-            <MudTh>@localizer["_RN"]</MudTh>
+            <MudTh>@localizer["_OvmcUrnNumber"]</MudTh>
             <MudTh>@localizer["_MoLWpn"]</MudTh>        
             <MudTh>@localizer["_Country"]</MudTh>
             <MudTh>@localizer["_Passport"]</MudTh>
@@ -48,7 +40,7 @@
             <MudTh>@localizer["_Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="@localizer["_RN"]">RN_@context.Id</MudTd>
+            <MudTd DataLabel="@localizer["_OvmcUrnNumber"]">@context.OvmcUrnNumber</MudTd>
             <MudTd DataLabel="@localizer["_MoLWpn"]">@context.MolWorkPermitNo</MudTd>        
             <MudTd DataLabel="@localizer["_Country"]">@context.Country</MudTd>       
             <MudTd DataLabel="@localizer["_Passport"]">@context.PassportNo</MudTd>     
@@ -79,7 +71,15 @@
                     <MudChip T="string" Icon="@Icons.Material.Filled.Print" IconColor="Color.Dark" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Dark" 
                         OnClick="@(() => Print(context))">@localizer["_Print"]</MudChip>
                 }
-                @if(!(context.RequestStatus != OvmcRequestStatus.SUBMITTED)){
+
+                @if (!string.IsNullOrEmpty(context.OvmcUrnNumber))
+                {
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Feed" IconColor="Color.Dark" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Dark"
+                             OnClick="@(() => Icr(context))">@localizer["_Icr"]</MudChip>
+                }
+
+                @if (context.RequestStatus != OvmcRequestStatus.COMPLETED && context.RequestStatus != OvmcRequestStatus.INPROCESS)
+                {
                     <MudChip T="string" Icon="@Icons.Material.Filled.Edit" IconColor="Color.Primary" Size="Size.Small" 
                         Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => EditRequest(context.Id))">@localizer["_Edit"]</MudChip>              
                 }
@@ -87,11 +87,16 @@
                 @if(context.PaymentStatus != OvmcPaymentStatus.SUCCESS && context.RequestStatus == OvmcRequestStatus.SUBMITTED){
                     <MudChip T="string" Disabled="@isPaymentInProcess" Icon="@Icons.Material.Filled.Payments" IconColor="Color.Success" Size="Size.Small" 
                         Variant="Variant.Outlined" Color="Color.Success" OnClick="@(async () => Payment(context.MolWorkPermitNo, context.PassportNo, context.GivenName, context.Id))">
-                        @(isPaymentInProcess ? localizer["_Wait"] : localizer["_Pay"])
+                        @(isPaymentInProcess ? localizer["_Wait"] + " " + Counter + "s" : localizer["_Pay"])
                     </MudChip>
                 }       
                 
-                @if(context.PaymentStatus == OvmcPaymentStatus.SUCCESS && context.RequestStatus != OvmcRequestStatus.INPROCESS){
+                @if(context.PaymentStatus == OvmcPaymentStatus.SUCCESS && !new[]
+                    {
+                        OvmcRequestStatus.CANCELLED,
+                        OvmcRequestStatus.INPROCESS,
+                        OvmcRequestStatus.COMPLETED
+                    }.Contains(context.RequestStatus)){
                     <MudChip T="string" Icon="@Icons.Material.Filled.MedicalInformation" IconColor="Color.Error" Size="Size.Small" 
                         Variant="Variant.Outlined" Color="Color.Error" OnClick="@(async () => Schedule(context.OvmcUrnNumber))">@localizer["_Schedule"]</MudChip>
                 }
@@ -205,29 +210,14 @@
     </MudTable>
 </MudPaper>
 
-<MudDialog Visible="isScheduleClicked">
-    <TitleContent>
-        @localizer.Html("_ScheduleAppointmentMessage")
-    </TitleContent>
-    <DialogContent>
-        @localizer.Html("_ScheduleAppointmentDetails")
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="HideSchedule">@localizer["_ScheduleLater"]</MudButton>
-        <MudButton Color="Color.Primary" Href="@($"https://omanpost.om?t={scheduleGrnNumber}")" Target="_blank" OnClick="HideSchedule">@localizer["_ScheduleNow"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
 @code
-{
+{  
+    private int Counter = 60;
     private bool isPaymentInProcess = false;
     private string searchString = "";
     private int showingMoreDetailId = 0;
     private List<OvmcRequest> _ovmcRequests = new();
         
-    private bool isScheduleClicked = false;    
-    private string scheduleGrnNumber = "";
-
     protected override async Task OnInitializedAsync()
         => _ovmcRequests = await OvmcService.GetAllAsync();
 
@@ -245,6 +235,8 @@
             return true;
         if (element.MolWorkPermitNo.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
+        if (element.OvmcUrnNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
         if (element.GivenName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
@@ -258,7 +250,7 @@
     private async Task<bool> Payment(string molNo, string passport, string name, int id){
         bool? confirm1 = await Dialog.ShowMessageBoxAsync(
             localizer["_ProceedToPayment"],
-            localizer["_ProceedToPaymentMessage", molNo, passport, name],
+            "",
             yesText: localizer["_PayNow"],
             noText: null,
             cancelText: localizer["_PayLater"],
@@ -266,11 +258,23 @@
 
             if (confirm1 == true)
             {
-                isPaymentInProcess = true;
                 var payment = await PaymentService.InitiatePaymentAsync(id);
 
                 if(payment != null){
+                    Counter = 60;
+                    isPaymentInProcess = true;
+                    await InvokeAsync(StateHasChanged);
                     await jsRuntime.InvokeVoidAsync("openBankPayment", (string) payment.paymentUrl, (string) payment.encRequest, (string) payment.accessCode);
+
+                    for (; Counter > 0; Counter--){                
+                        await Task.Delay(1000);
+                        await InvokeAsync(StateHasChanged);
+                    }
+
+                    isPaymentInProcess = false;
+                    Counter = 60;
+                    _ovmcRequests = await OvmcService.GetAllAsync();
+                    await InvokeAsync(StateHasChanged);   
                 } else {
                     Snackbar.Add(localizer.Html("_PaymentFailedToInitiate"), Severity.Error);
                     isPaymentInProcess = false;
@@ -299,14 +303,39 @@
         var result = await dialog.Result;
     }
 
-    private async Task HideSchedule(){        
-        scheduleGrnNumber = "";
-        isScheduleClicked = false;
+    private async Task Print(OvmcRequest request){
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var parameters = new DialogParameters<PrintDialog>
+        {
+            { x => x.SelectedOvmcRequest, request }
+        };
+
+        var dialog = await Dialog.ShowAsync<PrintDialog>("Print", parameters, options);
+        var result = await dialog.Result;
     }
 
-    private async Task ResetPaymentProcess(){
-        isPaymentInProcess = false;
-        _ovmcRequests = await OvmcService.GetAllAsync();
-        StateHasChanged();
+    private async Task Icr(OvmcRequest request){
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true
+        };
+
+        var parameters = new DialogParameters<Icr>
+        {
+            { x => x.SelectedOvmcRequest, request }
+        };
+
+        var dialog = await Dialog.ShowAsync<Icr>("ICR", parameters, options);
+        var result = await dialog.Result;
     }
 }

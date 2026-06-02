@@ -1,5 +1,6 @@
 ﻿using MudBlazor;
 using OP.PORTAL.Locales;
+using System.ComponentModel.DataAnnotations;
 using System.Resources;
 using System.Text.RegularExpressions;
 
@@ -10,7 +11,91 @@ namespace OP.PORTAL.Models
         public string? LastModifiedBy { get; set; }
     }
 
-    public class OvmcValidator
+    public class OnlyNumberAttribute : ValidationAttribute
+    {
+        private readonly int _min;
+        private readonly int _max;
+
+        public OnlyNumberAttribute(int min, int max)
+        {
+            _min = min;
+            _max = max;
+        }
+
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var str = value as string ?? string.Empty;
+            var validatorFunc = OvmcValidator.OnlyNumber(_min, _max);
+            // assuming the validator returns null/empty when valid, otherwise an error message
+            var errorMessage = validatorFunc(str);
+
+            if (string.IsNullOrEmpty(errorMessage))
+                return ValidationResult.Success;
+
+            // prefer attribute's ErrorMessage if set, otherwise use returned message
+            var msg = string.IsNullOrEmpty(ErrorMessage) ? errorMessage : ErrorMessage;
+            return new ValidationResult(msg);
+        }
+    }
+
+    public class NoArabicAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var str = value as string ?? string.Empty;
+            var errorMessage = OvmcValidator.NoArabic(str);
+
+            if (string.IsNullOrEmpty(errorMessage))
+                return ValidationResult.Success;
+
+            var msg = string.IsNullOrEmpty(ErrorMessage) ? errorMessage : ErrorMessage;
+            return new ValidationResult(msg);
+        }
+    }
+    public class GenderCheckAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var str = value as string ?? string.Empty;
+            var errorMessage = OvmcValidator.GenderCheck(str);
+
+            if (string.IsNullOrEmpty(errorMessage))
+                return ValidationResult.Success;
+
+            var msg = string.IsNullOrEmpty(ErrorMessage) ? errorMessage : ErrorMessage;
+            return new ValidationResult(msg);
+        }
+    }
+    public class DateOfBirthAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var str = value as DateTime? ?? null;
+            var errorMessage = OvmcValidator.DateOfBirth(str);
+
+            if (string.IsNullOrEmpty(errorMessage))
+                return ValidationResult.Success;
+
+            var msg = string.IsNullOrEmpty(ErrorMessage) ? errorMessage : ErrorMessage;
+            return new ValidationResult(msg);
+        }
+    }
+    public class PassportExpiryDateAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var str = value as DateTime? ?? null;
+            var errorMessage = OvmcValidator.PassportExpiryDate(str);
+
+            if (string.IsNullOrEmpty(errorMessage))
+                return ValidationResult.Success;
+
+            var msg = string.IsNullOrEmpty(ErrorMessage) ? errorMessage : ErrorMessage;
+            return new ValidationResult(msg);
+        }
+    }
+
+    public class OvmcValidator 
     {
         public static string NoArabic(string value)
         {
@@ -87,6 +172,37 @@ namespace OP.PORTAL.Models
                 ? Resource.ResxArabicInputValidation
                 : string.Empty;
         }
+
+        public static string GenderCheck(string value)
+        {
+            List<string> genders = new List<string> { "Male", "Female" };
+            return genders.Contains(value)?string.Empty:"Gender should be 'Male' or 'Female'";
+        }
+
+        public static string DateOfBirth(DateTime? value)
+        {
+            if (!value.HasValue)
+                return Resource.ResxRequired;
+
+            var age = DateTime.Today.Year - value.Value.Year;
+            if (value.Value.Date > DateTime.Today.AddYears(-age)) age--;
+
+            if (age < 18 || age > 60)
+                return "You must be between 18 and 60 years old";
+
+            return string.Empty;
+        }
+
+        public static string PassportExpiryDate(DateTime? value)
+        {
+            if (!value.HasValue)
+                return Resource.ResxRequired;
+
+            if (value.Value.Date < DateTime.Today.AddMonths(6))
+                return "Passport Expiry Date must not be less than 6 months";
+
+            return string.Empty;
+        }
     }
 
     public static class OvmcFormat
@@ -113,7 +229,7 @@ namespace OP.PORTAL.Models
     {
         public static readonly string SUBMITTED = "Submitted";
         public static readonly string INPROCESS = "In-Process";
-        public static readonly string NOTAPPAIRED = "Not-Appaired";
+        public static readonly string NOTAPPAIRED = "Not-Appeared";
         public static readonly string COMPLETED = "Completed";
         public static readonly string CANCELLED = "Cancelled";
     }
@@ -129,6 +245,8 @@ namespace OP.PORTAL.Models
 
         public static bool IsPaymentSuccess(string status)
         {
+            if(string.IsNullOrEmpty(status))
+                return false;
             return status.ToLower() == SUCCESS.ToLower() || status.ToLower() == SHIPPED.ToLower();
         }
     }

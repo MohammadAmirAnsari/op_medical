@@ -88,12 +88,12 @@ namespace OP.GATEWAY.Handlers
             }
             catch (Exception ex)
             {
-                AppLogHelper.WriteLog("Failed to log AIS API request/response : " + ex.Message);
+                AppLogHelper.WriteLog("Failed to log OVMC API request/response : " + ex.Message);
             }
 
             return response ?? new HttpResponseMessage(HttpStatusCode.BadRequest)
             {
-                Content = new StringContent("Failed to obtain AIS API token."),
+                Content = new StringContent("Failed to obtain OVMC API token."),
                 ReasonPhrase = "Authentication Failed"
             };
         }

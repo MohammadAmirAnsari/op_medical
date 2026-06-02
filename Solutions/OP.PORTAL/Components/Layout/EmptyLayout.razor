@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 
 <MudRTLProvider RightToLeft="@LayoutHelper.RightToLeft">
     <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
@@ -15,33 +16,21 @@
             <MudAppBar Elevation="1">
                 <MudImage Src="oman_logo.png" Alt="Oman Post" Height="40" Elevation="0" Class="rounded-lg"/>
                 <MudSpacer />  
-                <MudTooltip Text="@localizer["_Help"]" Color="Color.Warning" Placement="Placement.Bottom" Arrow="true">
-                    <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Warning" Edge="Edge.End" Href="help" Target="_blank"/> 
-                </MudTooltip> 
-                <MudMenu Dense="true" AnchorOrigin="Origin.BottomCenter"
-                         TransformOrigin="Origin.TopCenter">
-                    <ActivatorContent>
-                        <MudTooltip Text="@localizer["_Language"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
-                            <MudIconButton Icon="@Icons.Material.Filled.GTranslate" Color="Color.Secondary"/> 
-                        </MudTooltip> 
-                    </ActivatorContent>
-                    <ChildContent>
-                        <MudMenuItem OnClick="@((e) => SetCulture("en-US"))">
-                            <ActivatorContent>
-                                <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
-                                     height="12" class="mr-2" />
-                                @localizer["_Language_English"]
-                            </ActivatorContent>
-                        </MudMenuItem>
-                        <MudMenuItem OnClick="@((e) => SetCulture("ar-OM"))">
-                            <ActivatorContent>
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
-                                     height="12" class="mr-2" />
-                                @localizer["_Language_Arabic"]
-                            </ActivatorContent>
-                        </MudMenuItem>                
-                    </ChildContent>
-                </MudMenu>
+                <MudItem>
+                    <MudButton Color="Color.Primary" Target="_blank" Href="@localizer["_HOWTOAPPLYFILE"]">@localizer["_HOWTOAPPLY"]</MudButton>
+                </MudItem>
+                @if (NavManager.ToBaseRelativePath(NavManager.Uri) != "help")
+                {
+                <MudItem>
+                        <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Warning" Href="help" Target="_blank" />
+                </MudItem> 
+                } else
+                {
+                    <MudItem>
+                        <MudIconButton Icon="@Icons.Material.Filled.Home"  Href="home" Style="width: fit-content; white-space: nowrap;" />
+                    </MudItem>
+                }
+                <LangMenu />
             </MudAppBar>
             <MudMainContent Class="pt-16 pa-1">
                 @Body
@@ -79,7 +68,6 @@
             }
         };
 
-        _culture = CultureInfo.CurrentCulture;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -99,23 +87,6 @@
         {
             _checking = false;
             StateHasChanged();
-        }
-    }
-
-    private CultureInfo _culture {
-        get {
-            return CultureInfo.CurrentCulture;
-        }
-        set {
-            if (value != null && value != CultureInfo.CurrentCulture)
-            {
-                var uri = new Uri(navigator.Uri)
-                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-                var cultureEscape = Uri.EscapeDataString(value.Name);
-                var uriEscape = Uri.EscapeDataString(uri);
-
-               navigator.NavigateTo($"Culture/Set?culture={cultureEscape}&redirectUri={uriEscape}", forceLoad: true);
-            }
         }
     }
 
@@ -187,11 +158,7 @@
         LayoutHelper.OnChange -= StateHasChanged;
     }
 
-    void SetCulture(string culture)
-    {
-        if(_culture.Name != culture)
-            _culture = new CultureInfo(culture);
-    }
+
 }
 
 

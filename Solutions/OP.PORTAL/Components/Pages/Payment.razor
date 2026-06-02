@@ -23,16 +23,30 @@
                     <tbody>
                         <tr><td>@localizer.Html("_OrderID")</td><td>@ovmcPayment.OrderNo</td></tr>
                         <tr><td>@localizer.Html("_TrackingId")</td><td>@ovmcPayment.TrackingId</td></tr>
-                        <tr><td>@localizer.Html("_Currency")</td><td>@localizer.Html("_OMR")</td></tr>
-                        <tr><td>@localizer.Html("_Amount")</td><td>@ovmcPayment.Amount.ToString(OvmcFormat.AMOUNTFORMAT)</td></tr>
+                        <tr><td>@localizer.Html("_Currency")</td><td>@localizer.Html("_USD")</td></tr>
+                        <tr><td>@localizer.Html("_Amount")</td><td>@((((float)ovmcPayment.Amount) / 0.3845).ToString(OvmcFormat.AMOUNTFORMAT))</td></tr>
                         <tr><td>@localizer.Html("_Status")</td><td>@ovmcPayment.Status</td></tr>
                         <tr><td>@localizer.Html("_BankStatus")</td><td>@ovmcPayment.BankStatusCode</td></tr>
                         <tr><td>@localizer.Html("_BankMessage")</td><td>@ovmcPayment.BankStatusMessage</td></tr>
                         <tr><td>@localizer.Html("_PaymentDate")</td><td>@ovmcPayment.CreatedDate.ToString(OvmcFormat.DATETIMEFORMAT)</td></tr>
+                        <tr>
+                            <td colspan="2" align="center" style="align-content:unsafe center;">
+                                <MudGrid>
+                                <MudItem xs="12" sm="3" ></MudItem>
+                                <MudItem xs="12" sm="6" Class="TextCenter">
+                                    <MudChip T="string" Icon="@Icons.Material.Filled.Feed" IconColor="Color.Dark" Size="Size.Large" Variant="Variant.Outlined" Color="Color.Dark" Disabled="@(!OvmcPaymentStatus.IsPaymentSuccess(ovmcPayment?.Status))"
+                                             OnClick="@(() => Icr(ovmcPayment))">@localizer["_IcrPrint"]</MudChip>
+                                </MudItem>
+                                <MudItem xs="12" sm="3"></MudItem>
+                                </MudGrid>
+                            </td>
+                        </tr>
                     </tbody>
                 </MudSimpleTable>
             </MudPaper>
         }
+
+        
 
         <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
                     OnClick="GoBack" StartIcon="@Icons.Material.Filled.ArrowBack">
@@ -51,6 +65,28 @@
             string orderId = AesHelper.DecryptUrl(encidt);
             ovmcPayment = await PaymentService.GetPaymentAsync(orderId);
        }
+    }
+
+    private async Task Icr(OvmcPayment request)
+    {
+        var SelectedOvmcRequest = (from ovcRequest in db.OvmcRequests
+                                    where ovcRequest.Id == request.RequestId
+                                    select ovcRequest).FirstOrDefault();
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true
+        };
+
+        var parameters = new DialogParameters<Icr>
+        {
+            { x => x.SelectedOvmcRequest, SelectedOvmcRequest }
+        };
+
+        var dialog = await Dialog.ShowAsync<Icr>("ICR", parameters, options);
+        var result = await dialog.Result;
     }
 
     private void GoBack()
