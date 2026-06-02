@@ -1,0 +1,322 @@
+﻿@page "/history"
+@using MudBlazor
+
+
+<MudPaper Class="pa-4" Elevation="0">
+    @if (isPaymentInProcess)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-2">
+            @localizer.Html("_PaymentInProcessMessage")
+            <MudLink OnClick="ResetPaymentProcess" Href="history" Underline="Underline.Always">@localizer["_Refresh"]</MudLink>.
+        </MudAlert>
+    }
+
+    <MudTable Items="@_ovmcRequests.OrderByDescending(d => d.Id)" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Bordered="true" Striped="true"
+        Filter="new Func<OvmcRequest,bool>(FilterFunc)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6" GutterBottom="true">@localizer["_OvmcHistoryMessage"]</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString" Adornment="Adornment.Start" Placeholder="@localizer["_Search"]"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col />
+            <col />
+            <col />            
+            <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                <col />
+                <col />
+            </MudHidden>            
+            <col />
+            <col />
+            <col />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>@localizer["_RN"]</MudTh>
+            <MudTh>@localizer["_MoLWpn"]</MudTh>        
+            <MudTh>@localizer["_Country"]</MudTh>
+            <MudTh>@localizer["_Passport"]</MudTh>
+            <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                <MudTh>@localizer["_VisaType"]</MudTh>
+                <MudTh>@localizer["_Name"]</MudTh>
+            </MudHidden>
+            <MudTh>@localizer["_RequestStatus"]</MudTh>
+            <MudTh>@localizer["_PaymentStatus"]</MudTh>        
+            <MudTh>@localizer["_UpdatedOn"]</MudTh>
+            <MudTh>@localizer["_Actions"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@localizer["_RN"]">RN_@context.Id</MudTd>
+            <MudTd DataLabel="@localizer["_MoLWpn"]">@context.MolWorkPermitNo</MudTd>        
+            <MudTd DataLabel="@localizer["_Country"]">@context.Country</MudTd>       
+            <MudTd DataLabel="@localizer["_Passport"]">@context.PassportNo</MudTd>     
+            <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                <MudTd DataLabel="@localizer["_VisaType"]">@context.VisaType</MudTd>    
+                <MudTd DataLabel="@localizer["_Name"]">@context.GivenName</MudTd>
+            </MudHidden>
+            <MudTd DataLabel="@localizer["_RequestStatus"]">
+                <MudChip T="string" Variant="Variant.Filled"
+                            Color="@RequestStatusColor.GetStatusColor(context.RequestStatus)"
+                            Size="Size.Small">
+                            @context.RequestStatus
+                        </MudChip>
+            </MudTd>        
+            <MudTd DataLabel="@localizer["_PaymentStatus"]">
+                <MudChip T="string" Variant="Variant.Filled"
+                    Color="@RequestStatusColor.GetStatusColor(context.PaymentStatus)"
+                    Size="Size.Small">
+                    @context.PaymentStatus
+                </MudChip>
+            </MudTd> 
+            <MudTd DataLabel="@localizer["_UpdatedOn"]">@context.ModifiedDate.ToString(OvmcFormat.DATETIMEFORMAT)</MudTd> 
+            <MudTd>
+                <MudChip T="string" Icon="@Icons.Material.Filled.RemoveRedEye" IconColor="Color.Warning" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" 
+                    OnClick="@(() => ShowBtnPress(context.Id))">@localizer["_View"]</MudChip> 
+<<<<<<< HEAD
+
+                @if(!string.IsNullOrEmpty(context.OvmcUrnNumber)){
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Print" IconColor="Color.Dark" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Dark" 
+                        OnClick="@(() => Print(context))">@localizer["_Print"]</MudChip>
+                }
+
+=======
+>>>>>>> parent of d224af8 (changes - suggested by priya)
+                @if(!(context.RequestStatus != OvmcRequestStatus.SUBMITTED)){
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Edit" IconColor="Color.Primary" Size="Size.Small" 
+                        Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => EditRequest(context.Id))">@localizer["_Edit"]</MudChip>              
+                }
+
+                @if(context.PaymentStatus != OvmcPaymentStatus.SUCCESS && context.RequestStatus == OvmcRequestStatus.SUBMITTED){
+                    <MudChip T="string" Disabled="@isPaymentInProcess" Icon="@Icons.Material.Filled.Payments" IconColor="Color.Success" Size="Size.Small" 
+                        Variant="Variant.Outlined" Color="Color.Success" OnClick="@(async () => Payment(context.MolWorkPermitNo, context.PassportNo, context.GivenName, context.Id))">
+                        @(isPaymentInProcess ? localizer["_Wait"] : localizer["_Pay"])
+                    </MudChip>
+                }       
+                
+                @if(context.PaymentStatus == OvmcPaymentStatus.SUCCESS && context.RequestStatus != OvmcRequestStatus.INPROCESS){
+                    <MudChip T="string" Icon="@Icons.Material.Filled.MedicalInformation" IconColor="Color.Error" Size="Size.Small" 
+                        Variant="Variant.Outlined" Color="Color.Error" OnClick="@(async () => Schedule(context.OvmcUrnNumber))">@localizer["_Schedule"]</MudChip>
+                }
+           </MudTd>
+        </RowTemplate>        
+        <PagerContent>
+            <MudTablePager RowsPerPageString="@localizer["_RowsPerPage"]"/>
+        </PagerContent>
+        <ChildRowContent>
+            @if (context.Id == showingMoreDetailId)
+            {
+                <MudTr Style="background-color: #e8e8e8; ">
+                    <MudTd colspan="10">
+                        <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="false" Style="overflow-x: auto;" Class="ma-2">
+                            <thead>
+                                <tr>
+                                    <th colspan="10" style="text-transform: uppercase;">@localizer["_OvmcUrnNumber"] : @context.OvmcUrnNumber</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_RN"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.Id</span>
+                                    </td>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_GivenName"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.GivenName</span>
+                                    </td>                                    
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_PhoneNo"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.PhoneNo</span>
+                                    </td>
+                                </tr>                               
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_MoLWpn"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.MolWorkPermitNo</span>
+                                    </td>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_Surname"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.Surname</span>
+                                    </td>                                    
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_Email"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.Email</span>
+                                    </td>
+                                </tr>                                 
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_Country"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" Class="blue-text text-accent-4">: @context.Country</span>
+                                    </td>    
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_PassportNo"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.PassportNo</span>
+                                    </td>                               
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_DateOfBirth"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.DateOfBirth?.ToString(OvmcFormat.DATEFORMAT)</span>
+                                    </td>
+                                </tr>                                     
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_City"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.City</span>
+                                    </td>                                                                   
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_PassportExpiryDate"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.PassportExpiryDate?.ToString(OvmcFormat.DATEFORMAT)</span>
+                                    </td>                                                                   
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_Gender"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.Gender</span>
+                                    </td>
+                                </tr>                                
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_VisaType"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.VisaType</span>
+                                    </td>     
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_PassportIssuePlace"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.PassportIssuePlace</span>
+                                    </td>                                                              
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_MaritalStatus"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.MaritalStatus</span>
+                                    </td>
+                                </tr>                                      
+                                <tr>
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_SubmittedOn"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.CreatedDate.ToString(OvmcFormat.DATEFORMAT)</span>
+                                    </td>  
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_PassportIssueDate"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.PassportIssueDate?.ToString(OvmcFormat.DATEFORMAT)</span>
+                                    </td>                                                         
+                                    <td>
+                                        <span style="width:49%; display:inline-block;">@localizer["_LastModifiedOn"]</span>
+                                        <span style="width:49%; display:inline-block; text-transform: uppercase;" class="blue-text text-accent-4">: @context.ModifiedDate.ToString(OvmcFormat.DATEFORMAT)</span>
+                                    </td>
+                                </tr> 
+                            </tbody>
+                        </MudSimpleTable>
+                  </MudTd>
+                </MudTr>
+            }
+        </ChildRowContent>
+    </MudTable>
+</MudPaper>
+
+<MudDialog Visible="isScheduleClicked">
+    <TitleContent>
+        @localizer.Html("_ScheduleAppointmentMessage")
+    </TitleContent>
+    <DialogContent>
+        @localizer.Html("_ScheduleAppointmentDetails")
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="HideSchedule">@localizer["_ScheduleLater"]</MudButton>
+        <MudButton Color="Color.Primary" Href="@($"https://omanpost.om?t={scheduleGrnNumber}")" Target="_blank" OnClick="HideSchedule">@localizer["_ScheduleNow"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code
+{
+    private bool isPaymentInProcess = false;
+    private string searchString = "";
+    private int showingMoreDetailId = 0;
+    private List<OvmcRequest> _ovmcRequests = new();
+        
+    private bool isScheduleClicked = false;    
+    private string scheduleGrnNumber = "";
+
+    protected override async Task OnInitializedAsync()
+        => _ovmcRequests = await OvmcService.GetAllAsync();
+
+    private void ShowBtnPress(int nr)
+    {
+        if(showingMoreDetailId != nr)
+            showingMoreDetailId = nr;
+        else
+            showingMoreDetailId = 0;
+    }
+
+    private bool FilterFunc(OvmcRequest element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.MolWorkPermitNo.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.GivenName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void EditRequest(int id){
+        string encId = AesHelper.EncryptUrl(Convert.ToString(id));
+        navigator.NavigateTo("request/" + encId);
+    }
+
+    private async Task<bool> Payment(string molNo, string passport, string name, int id){
+        bool? confirm1 = await Dialog.ShowMessageBoxAsync(
+            localizer["_ProceedToPayment"],
+            localizer["_ProceedToPaymentMessage", molNo, passport, name],
+            yesText: localizer["_PayNow"],
+            noText: null,
+            cancelText: localizer["_PayLater"],
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
+
+            if (confirm1 == true)
+            {
+                isPaymentInProcess = true;
+                var payment = await PaymentService.InitiatePaymentAsync(id);
+
+                if(payment != null){
+                    await jsRuntime.InvokeVoidAsync("openBankPayment", (string) payment.paymentUrl, (string) payment.encRequest, (string) payment.accessCode);
+                } else {
+                    Snackbar.Add(localizer.Html("_PaymentFailedToInitiate"), Severity.Error);
+                    isPaymentInProcess = false;
+                }
+                StateHasChanged();
+                return true;
+            }
+        return false;
+    }
+
+<<<<<<< HEAD
+    private async Task Schedule(string urnno){
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var parameters = new DialogParameters<ScheduleDialog>
+        {
+            { x => x.RequestUrnNumber, urnno }
+        };
+
+        var dialog = await Dialog.ShowAsync<ScheduleDialog>("Schedule", parameters, options);
+        var result = await dialog.Result;
+=======
+    private async Task Schedule(string grnno){
+        scheduleGrnNumber = grnno;
+        isScheduleClicked = true;
+>>>>>>> parent of d224af8 (changes - suggested by priya)
+    }
+
+    private async Task HideSchedule(){        
+        scheduleGrnNumber = "";
+        isScheduleClicked = false;
+    }
+
+    private async Task ResetPaymentProcess(){
+        isPaymentInProcess = false;
+        _ovmcRequests = await OvmcService.GetAllAsync();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,183 @@
+﻿@page "/"
+@layout Layout.EmptyLayout
+
+<MudForm @ref="_form" Disabled="@_submitted">
+    <MudPaper Class="ma-1 pa-4" Elevation="0">
+        <MudGrid>
+            <MudItem xs="12" md="7" Class="justify-center align-center pa-4">
+                <MudText Typo="Typo.h4" Class="mb-4">@localizer.Html("_WelcomeMessage")</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-6">
+                    @localizer.Html("_WelcomeDetails")
+                </MudText>                                                              
+                <MudDivider Class="my-4" />  
+                <MudText Typo="Typo.subtitle1">
+                    @localizer.Html("_DontHaveAccountMessage")
+                </MudText>
+                <MudButton StartIcon="@Icons.Material.Filled.EditNote" Variant="Variant.Outlined" Class="mt-3"
+                    Color="Color.Primary" Href="register" OnClick="@((e) => Register())">@localizer.Html("_RegisterLink")</MudButton>
+                                                                              
+                <MudDivider Class="my-4" />
+                <MudButton Variant="Variant.Text" Underline="Underline.Always" StartIcon="@Icons.Material.Filled.ConnectWithoutContact" Color="Color.Info" Href="https://www.omanpost.om/" 
+                    Target="_blank">@localizer.Html("_ContactUsMessage")</MudButton>  
+            </MudItem>      
+
+            <!-- RIGHT SIDE: Login / Register -->
+            <MudItem xs="12" md="5" Class="right-side">
+                <MudCard Outlined="true" Elevation="2" Class="pa-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_SponsorsLogin")</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">@localizer.Html("_SponsorsLoginMessage")</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">
+                        <MudGrid Spacing="1">                                     
+                                <MudItem xs="12" sm="12">
+                                    <MudTextField 
+                                           InputType="InputType.Number"
+                                            @ref="_phoneField"
+                                            @bind-Value="model.PhoneNo" 
+                                            For="@(() => model.PhoneNo)"
+                                            Label="@localizer["_SponsorsLoginUsername"]"
+                                            HelperText="@localizer["_SponsorLoginUsernameHelperText"]"
+                                            Placeholder="@localizer["_SponsorLoginUsernamePlaceholder"]"
+                                            Variant="Variant.Outlined"
+                                            Dense="true" ShrinkLabel 
+                                            Margin="Margin.Dense"
+                                            Immediate="false"
+                                            OnlyValidateIfDirty="true"/>
+                                </MudItem>   
+                                <MudItem xs="12" sm="12">
+                                        <MudTextField 
+                                            @ref="_pwdField"
+                                            InputType="@PasswordInput"
+                                            @bind-Value="model.Password" 
+                                            For="@(() => model.Password)"
+                                            Label="@localizer["_SponsorsLoginPassword"]"
+                                            HelperText="@localizer["_SponsorLoginPasswordHelperText"]"
+                                            Placeholder="@localizer["_SponsorLoginPasswordPlaceholder"]"
+                                            Variant="Variant.Outlined"
+                                            AdornmentColor="Color.Primary"
+                                            Adornment="Adornment.End" 
+                                            AdornmentIcon="@PasswordInputIcon" 
+                                            OnAdornmentClick="TogglePasswordVisibility"
+                                            Dense="true" ShrinkLabel 
+                                            Margin="Margin.Dense"
+                                            Immediate="false"
+                                            OnlyValidateIfDirty="true"/>   
+                                </MudItem>                                                                 
+                                <MudItem xs="12" sm="12">
+                                    <MudGrid Spacing="1">
+                                        <MudItem xs="8">
+                                            <MudTextField 
+                                                Disabled="@(!IsFirstOtpSent)"
+                                                @bind-Value="model.VerifyOtp" 
+                                                For="@(() => model.VerifyOtp)"
+                                                Label="@localizer["_VerifyOtp"]"
+                                                HelperText="@localizer["_VerifyOtpHelperText"]"
+                                                Placeholder="@localizer["_VerifyOtpPlaceholder"]"
+                                                InputType="InputType.Number"
+                                                Variant="@(IsFirstOtpSent ? Variant.Outlined : Variant.Filled)"
+                                                Dense="true" ShrinkLabel 
+                                                Margin="Margin.Dense"
+                                                Immediate="false"
+                                                OnlyValidateIfDirty="true"/>
+                                        </MudItem>
+                                        <MudItem xs="4" Class="justify-center align-center pa-3">
+                                            <MudButton Variant="Variant.Outlined" Disabled="@IsOtpSent"
+                                                        Color="Color.Primary"
+                                                        FullWidth="true"
+                                                        OnClick="SendOtp">
+                                                @(IsOtpSent ? localizer["_ResendOtp", Counter] : localizer["_SendOtp"])
+                                            </MudButton>
+                                        </MudItem>
+                                    </MudGrid>                                    
+                                </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudGrid Spacing="1">
+                                <MudItem xs="12" sm="8">
+                                    <MudButton Variant="Variant.Text" Href="forgot-password" StartIcon="@Icons.Material.Filled.ContactSupport" Color="Color.Info">@localizer["_ForgotPassword"]</MudButton>
+                                </MudItem>      
+                                <MudItem xs="12" sm="4">
+                                    <MudButton StartIcon="@Icons.Material.Filled.Login" Variant="Variant.Filled" FullWidth="true" Color="Color.Primary" DropShadow="false" OnClick="Submit">@localizer["_Login"]</MudButton>                            
+                                </MudItem>
+                        </MudGrid>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudForm>
+
+@code {
+    private bool IsOtpSent = false;
+    private bool IsFirstOtpSent = false;
+    private int Counter = 60;
+    private MudForm _form;
+    private bool _submitted = false;
+    SponsorLogin model = new ();
+    MudTextField<string> _phoneField;
+    MudTextField<string> _pwdField;
+
+    private async Task SendOtp()
+    {
+        if (_pwdField.HasErrors || _phoneField.HasErrors) return;
+
+        if(IsOtpSent == false){
+            SmsResponse _response = await AuthService.SendOtpAsync(model.PhoneNo, model.Password);
+            if(_response.Status){   
+                Counter = 60;
+                IsOtpSent = true;
+                IsFirstOtpSent = true;
+                await InvokeAsync(StateHasChanged);
+                Snackbar.Add(localizer.Html("_OtpSuccessMessage", model.PhoneNo, Counter), Severity.Success);
+
+                for (; Counter > 0; Counter--){                
+                    await Task.Delay(1000);
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                IsOtpSent = false;
+                Counter = 60;
+                await InvokeAsync(StateHasChanged);
+            }else{
+                Snackbar.Add(_response.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {                
+            var loginTask = await AuthService.LoginAsync(model.PhoneNo, model.Password, model.VerifyOtp);
+            if(loginTask != null) {
+                ((AuthStateHelper) AuthStateProvider).NotifyUserAuthentication(loginTask);      
+                navigator.NavigateTo("home");
+            }
+            else Snackbar.Add(localizer.Html("_InvalidUsernamePasswordOtpMessage", model.PhoneNo, Counter), Severity.Error);
+
+            await ResetRequestAsync();      
+        }
+    }
+
+    private async Task ResetRequestAsync(){ 
+        _submitted = false;
+        StateHasChanged();
+        await _form.ResetAsync();
+    }
+
+    public void Register(){
+        navigator.NavigateTo("register");
+    }    
+
+    bool _passwordVisibility;
+    InputType PasswordInput => _passwordVisibility ? InputType.Text : InputType.Password;
+    string PasswordInputIcon => _passwordVisibility ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+
+    void TogglePasswordVisibility() => _passwordVisibility = !_passwordVisibility;
+}

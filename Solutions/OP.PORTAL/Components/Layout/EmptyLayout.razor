@@ -1,0 +1,197 @@
+﻿@inherits LayoutComponentBase
+
+<MudRTLProvider RightToLeft="@LayoutHelper.RightToLeft">
+    <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudLayout MaxWidth="MaxWidth.Medium">
+        @if (_checking)
+        {
+            <PageLoading />
+        }
+        else
+        {            
+            <MudAppBar Elevation="1">
+                <MudImage Src="oman_logo.png" Alt="Oman Post" Height="40" Elevation="0" Class="rounded-lg"/>
+                <MudSpacer />  
+                <MudTooltip Text="@localizer["_Help"]" Color="Color.Warning" Placement="Placement.Bottom" Arrow="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Warning" Edge="Edge.End" Href="help" Target="_blank"/> 
+                </MudTooltip> 
+                <MudMenu Dense="true" AnchorOrigin="Origin.BottomCenter"
+                         TransformOrigin="Origin.TopCenter">
+                    <ActivatorContent>
+                        <MudTooltip Text="@localizer["_Language"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.GTranslate" Color="Color.Secondary"/> 
+                        </MudTooltip> 
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem OnClick="@((e) => SetCulture("en-US"))">
+                            <ActivatorContent>
+                                <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
+                                     height="12" class="mr-2" />
+                                @localizer["_Language_English"]
+                            </ActivatorContent>
+                        </MudMenuItem>
+                        <MudMenuItem OnClick="@((e) => SetCulture("ar-OM"))">
+                            <ActivatorContent>
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
+                                     height="12" class="mr-2" />
+                                @localizer["_Language_Arabic"]
+                            </ActivatorContent>
+                        </MudMenuItem>                
+                    </ChildContent>
+                </MudMenu>
+            </MudAppBar>
+            <MudMainContent Class="pt-16 pa-1">
+                @Body
+            </MudMainContent>
+        }
+    </MudLayout>    
+</MudRTLProvider>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool _rightToLeft = false;
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+    private MudTheme? _theme = null;
+
+    private bool _checking = true;
+    private bool _redirected;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _theme = new()
+        {
+            PaletteLight = _lightPalette,
+            PaletteDark = _darkPalette,
+            LayoutProperties = new LayoutProperties
+            {
+                DefaultBorderRadius = "8px"
+            }
+        };
+
+        _culture = CultureInfo.CurrentCulture;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _redirected)
+            return;
+
+
+        var uri = navigator.ToAbsoluteUri(navigator.Uri);
+        var isRoot = uri.AbsolutePath == "/" || string.IsNullOrEmpty(uri.AbsolutePath);
+        if (isRoot && await TokenHelper.IsAuthenticated())
+        {
+            _redirected = true;
+            navigator.NavigateTo($"home");
+        }
+        else
+        {
+            _checking = false;
+            StateHasChanged();
+        }
+    }
+
+    private CultureInfo _culture {
+        get {
+            return CultureInfo.CurrentCulture;
+        }
+        set {
+            if (value != null && value != CultureInfo.CurrentCulture)
+            {
+                var uri = new Uri(navigator.Uri)
+                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscape = Uri.EscapeDataString(value.Name);
+                var uriEscape = Uri.EscapeDataString(uri);
+
+               navigator.NavigateTo($"Culture/Set?culture={cultureEscape}&redirectUri={uriEscape}", forceLoad: true);
+            }
+        }
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+    private readonly PaletteLight _lightPalette = new()
+    {
+        Primary = "#41b6e6",             // Your main color
+        Secondary = "#00acc1",           // Complementary
+        AppbarBackground = "#ffffff",    // White appbar
+        AppbarText = "#212121",          // Dark text
+        Background = "#f0f2f5",          // Light page background
+        Surface = "#ffffff",              // Cards and surfaces
+        DrawerBackground = "#ffffff",
+        DrawerText = "#212121",
+        DrawerIcon = "#41b6e6",
+        TextPrimary = "#212121",
+        TextSecondary = "#555555",
+        ActionDefault = "#41b6e6",
+        ActionDisabled = "#9e9e9e",
+        Success = "#4caf50",
+        Info = "#2196f3",
+        Warning = "#ff9800",
+        Error = "#f44336"
+    };
+
+    private readonly PaletteDark _darkPalette = new()
+    {
+        Primary = "#41b6e6",             // Main color stays same
+        Secondary = "#00acc1",
+        AppbarBackground = "#1e1e1e",    // Dark appbar
+        AppbarText = "#ffffff",          // White text
+        Background = "#121212",          // Dark background
+        Surface = "#1e1e1e",             // Cards/surfaces
+        DrawerBackground = "#1b1b1b",
+        DrawerText = "#ffffff",
+        DrawerIcon = "#41b6e6",
+        TextPrimary = "#ffffff",
+        TextSecondary = "#bbbbbb",
+        ActionDefault = "#41b6e6",
+        ActionDisabled = "#555555",
+        Success = "#4caf50",
+        Info = "#2196f3",
+        Warning = "#ffb74d",
+        Error = "#ef5350"
+    };
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.AutoMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+
+    void SetLang(string culture)
+    {
+        LayoutHelper.SetLanguage(culture);
+    }
+
+    public void Dispose()
+    {
+        LayoutHelper.OnChange -= StateHasChanged;
+    }
+
+    void SetCulture(string culture)
+    {
+        if(_culture.Name != culture)
+            _culture = new CultureInfo(culture);
+    }
+}
+
+

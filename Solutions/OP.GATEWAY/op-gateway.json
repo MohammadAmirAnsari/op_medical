@@ -1,0 +1,47 @@
+{
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7221"
+  },
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/aisstage/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ais.moh.gov.om",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/api/aisstage/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "OP.Gateway.Auth",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "UserType": "GATEWAY"
+      },
+      "DelegatingHandlers": [ "AisAuthHandler" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7047
+        }
+      ],
+      "UpstreamPathTemplate": "/api/ovmcstage/{everything}",
+      "UpstreamHttpMethod": [ "GET", "PATCH", "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "OP.Gateway.Auth",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "UserType": "GATEWAY"
+      },
+      "DelegatingHandlers": [ "OvmcAuthHandler" ]
+    }
+  ]
+}

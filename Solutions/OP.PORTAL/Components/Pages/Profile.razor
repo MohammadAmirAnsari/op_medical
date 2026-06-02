@@ -1,0 +1,303 @@
+﻿@page "/profile"
+
+<MudPaper Class="pa-4" Elevation="0">    
+    <MudText Typo="Typo.h4" GutterBottom="true">@localizer.Html("_ProfileSponsorMessage")</MudText>
+    <MudText Class="mb-3">@localizer.Html("_ProfileSponsorDetails")</MudText>
+
+    <MudGrid Spacing="3" Class="mb-3">
+        <MudItem xs="12" md="8">
+            <MudForm @ref="_form" Disabled="@_submitted">
+                <MudCard Outlined="true" Elevation="2" Class="pa-2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_ProfileDetails")</MudText>
+                            <MudText Typo="Typo.body1">@localizer.Html("_ProfileDetailHelp")</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">
+                        <MudGrid Spacing="1">
+                              <MudItem xs="12" sm="6">
+                                  <MudTextField 
+                                        @bind-Value="model.Name" 
+                                        For="@(() => model.Name)"
+                                        Label="@localizer["_SponsorName"]"
+                                        HelperText="@localizer["_SponsorNameHelperText"]"                                        
+                                        Placeholder="@localizer["_SponsorNamePlaceholder"]"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="false"                                                                                                                                        
+                                        Validation="OvmcValidator.NoArabic"
+                                        OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Name)))"
+                                        OnlyValidateIfDirty="true"/>
+                              </MudItem>
+                              <MudItem xs="12" sm="6">
+                                    <MudTextField 
+                                        @bind-Value="model.NationalId" 
+                                        For="@(() => model.NationalId)"
+                                        Label="@localizer["_CrNationalNumber"]"
+                                        HelperText="@localizer["_CrNationalNumberHelperText"]"                                      
+                                        Placeholder="@localizer["_CrNationalNumberPlaceholder"]"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="false"                                            
+                                        Validation="OvmcValidator.OnlyNumber(6, 8)"
+                                        OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.NationalId)))"
+                                        OnlyValidateIfDirty="true"/>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudSelect 
+                                        @bind-Value="model.SponsorType" 
+                                        For="@(() => model.SponsorType)"
+                                        Label="@localizer["_SponsorType"]"
+                                        HelperText="@localizer["_SponsorTypeHelperText"]"
+                                        Placeholder="@localizer["_SponsorTypePlaceHolder"]"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense">
+                                        @foreach (var item in _sponsortypes)
+                                        {
+                                            <MudSelectItem Value="@item.Name">
+                                                @item.Name
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudSelect 
+                                        @bind-Value="model.City" 
+                                        For="@(() => model.City)"
+                                        Label="@localizer["_SponsorsCity"]"
+                                        HelperText="@localizer["_SponsorsCityHelperText"]"
+                                        Placeholder="@localizer["_SponsorsCityPlaceholder"]"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense">
+                                        @foreach (var item in _omancities)
+                                        {
+                                            <MudSelectItem Value="@item.Name">
+                                                @item.Name
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>                                     
+                                <MudItem xs="12" sm="6">                                    
+                                     <MudTextField 
+                                        @bind-Value="model.PhoneNo" 
+                                        For="@(() => model.PhoneNo)"
+                                        Label="@localizer["_SponsorsPhoneNo"]"
+                                        HelperText="@localizer["_SponsorPhoneNoHelperText"]"
+                                        Placeholder="@localizer["_SponsorPhoneNoPlaceholder"]"
+                                        Readonly="true"
+                                              InputType="InputType.Number"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="false"
+                                        OnlyValidateIfDirty="true"
+                                        Adornment="Adornment.End"
+                                        AdornmentColor="Color.Success"
+                                        AdornmentIcon="@Icons.Material.Filled.Check"/>
+                                </MudItem>                                                                  
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField 
+                                        HideHelperText="true"
+                                        @bind-Value="model.Email" 
+                                        For="@(() => model.Email)"
+                                        Label="@localizer["_SponsorsEmail"]"
+                                        HelperText="@localizer["_SponsorEmailHelperText"]"
+                                        Placeholder="@localizer["_SponsorEmailPlaceholder"]"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="false"                                                                                                                                                                                
+                                        Validation="OvmcValidator.NoArabic"
+                                        OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Email)))"
+                                        Mask="@RegexMask.Email()"
+                                        OnlyValidateIfDirty="true"/>                                                         
+                                </MudItem>  
+                        </MudGrid>
+                    </MudCardContent>                
+                    <MudCardActions>
+                        <MudGrid Spacing="1" Justify="Justify.FlexEnd">
+                                <MudItem xs="12" sm="3" Class="justify-end align-center">                                    
+                                    <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-2">@localizer["_Update"]</MudButton>
+                                </MudItem>
+                        </MudGrid>
+                    </MudCardActions>
+                </MudCard>            
+            </MudForm>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudForm @ref="_form1" Disabled="@_submitted1">
+                <MudCard Outlined="true" Elevation="2" Class="pa-2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_ResetPassword")</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Style="border: 1px solid lightgray; border-radius: 10px;" Elevation="2" Class="ma-1">
+                        <MudGrid Spacing="1">
+                              <MudItem xs="12">                                  
+                                    <MudAlert Severity="Severity.Info">
+                                        @localizer.Html("_PasswordPolicyMessage")                           
+                                    </MudAlert>
+                              </MudItem>
+                              <MudItem xs="12">
+                                  <MudTextField 
+                                        InputType="@PasswordInput"
+                                        @bind-Value="model1.Password" 
+                                        For="@(() => model1.Password)"                                        
+                                        Label="@localizer["_SponsorsPassword"]"
+                                        HelperText="@localizer["_SponsorPasswordHelperText"]"
+                                        Placeholder="@localizer["_SponsorPasswordPlaceholder"]"
+                                        AdornmentColor="Color.Primary"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="true"                                        
+                                        Validation="OvmcValidator.CheckPasswordStrength"
+                                        OnlyValidateIfDirty="true"
+                                        Adornment="Adornment.End" 
+                                        AdornmentIcon="@PasswordInputIcon" 
+                                        OnAdornmentClick="TogglePasswordVisibility"/>
+                              </MudItem>
+                              <MudItem xs="12">
+                                  <MudTextField 
+                                        InputType="@PasswordInput2"
+                                        @bind-Value="model1.ConfirmPassword" 
+                                        For="@(() => model1.ConfirmPassword)"                                        
+                                        Label="@localizer["_SponsorsConfirmPassword"]"
+                                        HelperText="@localizer["_SponsorConfirmPasswordHelperText"]"
+                                        Placeholder="@localizer["_SponsorConfirmPasswordPlaceholder"]"
+                                        AdornmentColor="Color.Primary"
+                                        Variant="Variant.Outlined"
+                                        Dense="true" ShrinkLabel 
+                                        Margin="Margin.Dense"
+                                        Immediate="false"
+                                        OnlyValidateIfDirty="true"
+                                        Adornment="Adornment.End" 
+                                        AdornmentIcon="@PasswordInputIcon2" 
+                                        OnAdornmentClick="TogglePasswordVisibility2"/>
+                              </MudItem>
+                        </MudGrid>
+                    </MudCardContent>                
+                    <MudCardActions>
+                        <MudGrid Spacing="1" Justify="Justify.FlexEnd">
+                                <MudItem xs="12" sm="4" Class="justify-end align-center">                                    
+                                    <MudButton OnClick="Submit1" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-2">@localizer["_Update"]</MudButton>
+                                </MudItem>
+                        </MudGrid>
+                    </MudCardActions>
+                </MudCard>            
+            </MudForm>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code { 
+    private MudForm _form;
+    private bool _submitted = false;
+    SponsorProfile model = new ();
+
+    private MudForm _form1;
+    private bool _submitted1 = false;
+    SponsorResetPassword model1 = new ();
+
+    private List<GeneralMaster> _gmRecords = new();
+    private List<GeneralMaster> _sponsortypes = new();
+    private List<GeneralMaster> _omancities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _gmRecords = await GeneralMasterService.GetAllAsync();
+        _sponsortypes = _gmRecords.Where(x => x.MasterType == MasterTypes.SPONSORTYPE).ToList();
+        _omancities = _gmRecords.Where(x => x.ParentName == "Oman" && x.MasterType == MasterTypes.CITY).ToList();
+        
+        model = await SponsorService.GetProfile();
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            bool? confirm = await Dialog.ShowMessageBoxAsync(
+                localizer["_ReviewAndConfirm"],
+                localizer["_ReviewAndConfirmMessage"],
+                yesText: localizer["_Confirm"],
+                null,
+                cancelText: localizer["_Review"],
+                options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
+
+            if (confirm == true)
+            {
+                _submitted = true;
+                StateHasChanged();
+
+                int rec = await SponsorService.UpdateProfileAsync(model);
+                if(rec > 0) {
+                    Snackbar.Add(localizer.Html("_ProfileUpdateSuccessMessage"), Severity.Success);
+                }
+                else Snackbar.Add(localizer.Html("_ProfileUpdateErrorMessage"), Severity.Error);
+                await ResetRequestAsync();
+            }
+        }
+    }
+
+    private async Task ResetRequestAsync(){ 
+        _submitted = false;
+        StateHasChanged();
+        await _form.ResetAsync(); 
+        model = await SponsorService.GetProfile();    
+    }
+
+    private async Task Submit1()
+    {
+        await _form1.Validate();
+
+        if (_form1.IsValid)
+        {
+            bool? confirm = await Dialog.ShowMessageBoxAsync(
+                localizer["_ReviewAndConfirm"],
+                localizer["_ReviewAndConfirmMessage"],
+                yesText: localizer["_Confirm"],
+                cancelText: localizer["_Review"],
+                options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
+
+            if (confirm == true)
+            {
+                _submitted1 = true;
+                StateHasChanged();
+
+                int rec = await SponsorService.UpdatePasswordAsync(model1);
+                if(rec > 0) {
+                    Snackbar.Add(localizer.Html("_PasswordUpdateSuccessMessage"), Severity.Success);
+                }
+                else Snackbar.Add(localizer.Html("_PasswordUpdateErrorMessage"), Severity.Error);
+                await ResetRequestAsync1();
+            }
+        }
+    }
+
+    private async Task ResetRequestAsync1(){ 
+        _submitted1 = false;
+        StateHasChanged();
+        await _form1.ResetAsync(); 
+        model1 = new ();    
+    }
+
+    bool _passwordVisibility;
+    InputType PasswordInput => _passwordVisibility ? InputType.Text : InputType.Password;
+    string PasswordInputIcon => _passwordVisibility ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+
+    void TogglePasswordVisibility() => _passwordVisibility = !_passwordVisibility;
+
+    bool _passwordVisibility2;
+    InputType PasswordInput2 => _passwordVisibility2 ? InputType.Text : InputType.Password;
+    string PasswordInputIcon2 => _passwordVisibility2 ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+
+    void TogglePasswordVisibility2() => _passwordVisibility2 = !_passwordVisibility2;
+}

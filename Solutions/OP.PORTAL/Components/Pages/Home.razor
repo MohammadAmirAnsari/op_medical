@@ -1,0 +1,184 @@
+﻿@page "/home"
+
+<MudPaper Class="pa-4" Elevation="0">
+    @if(localizer.Html("_HomePageAlertMessage").Value != ""){
+        <MudAlert Severity="Severity.Warning" Dense="true" ContentAlignment="HorizontalAlignment.Start" Class="mb-3">
+            @localizer.Html("_HomePageAlertMessage")
+        </MudAlert>
+    }
+    
+    <MudText Typo="Typo.h4" GutterBottom="true">@localizer.Html("_HelloSponsorMessage")</MudText>
+    <MudText Class="mb-3">@localizer.Html("_HelloSponsorDetails")</MudText>
+
+    <MudGrid Spacing="3" Class="mb-3">
+
+    <!-- Total Requests -->
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Class="pa-2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Description"
+                         Color="Color.Primary" Size="Size.Large" Style="font-size: 75px;" />
+                <MudStack>                    
+                    <MudText Typo="Typo.h3" Style="font-weight: 900;" Color="Color.Primary">@_ovmcRequests.Count()</MudText>
+                    <MudText Typo="Typo.subtitle2">@localizer.Html("_TotalRequests")</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCard>
+    </MudItem>
+
+    <!-- Pending Payment -->
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Class="pa-2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
+                         Color="Color.Warning" Size="Size.Large" Style="font-size: 75px;" />
+                <MudStack>
+                    <MudText Typo="Typo.h3" Style="font-weight: 900;" Color="Color.Warning">@_ovmcRequests.Where(r => r.PaymentStatus.Equals(OvmcPaymentStatus.PENDING)).Count()</MudText>
+                    <MudText Typo="Typo.subtitle2">@localizer.Html("_PendingPayments")</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCard>
+    </MudItem>
+
+    <!-- Completed Payment -->
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Class="pa-2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Success" Size="Size.Large" Style="font-size: 75px;" />
+                <MudStack>
+                    <MudText Typo="Typo.h3" Style="font-weight: 900;" Color="Color.Success">@_ovmcRequests.Where(r => r.PaymentStatus.Equals(OvmcPaymentStatus.SUCCESS)).Count()</MudText>
+                    <MudText Typo="Typo.subtitle2">@localizer.Html("_SuccessfulPayments")</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCard>
+    </MudItem>
+
+    <!-- Appointments -->
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Class="pa-2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.EventAvailable"
+                         Color="Color.Info" Size="Size.Large" Style="font-size: 75px;" />
+                <MudStack>
+                    <MudText Typo="Typo.h3" Style="font-weight: 900;" Color="Color.Info">@_ovmcRequests.Where(r => r.RequestStatus.Equals(OvmcRequestStatus.INPROCESS)).Count()</MudText>
+                    <MudText Typo="Typo.subtitle2">@localizer.Html("_InProcess")</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard Class="pa-4">
+
+            <MudStack Row AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.h6">@localizer.Html("_RecentRequests")<span style="font-size: 12px;"> (@localizer.Html("_Last5"))</span></MudText>
+                <MudSpacer />
+                <MudChip T="string" Icon="@Icons.Material.Filled.RemoveRedEye" IconColor="Color.Warning" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" Href="history">@localizer["_ViewAll"]</MudChip>
+            </MudStack>
+
+            <MudDivider Class="my-2" />
+
+            @if (_ovmcRequests.Any())
+            {
+                <MudTable Items="_ovmcRequests.OrderByDescending(d => d.Id).Take(5)" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Bordered="true" Striped="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>@localizer["_MoLWpn"]</MudTh>
+                        <MudTh>@localizer["_Visa"]</MudTh>
+                        <MudTh>@localizer["_Country"]</MudTh>
+                        <MudTh>@localizer["_Passport"]</MudTh>
+                        <MudTh>@localizer["_Name"]</MudTh>
+                        <MudTh>@localizer["_UpdatedOn"]</MudTh>
+                        <MudTh>@localizer["_RequestStatus"]</MudTh>
+                        <MudTh>@localizer["_PaymentStatus"]</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate>
+                        <MudTd DataLabel="@localizer["_MoLWpn"]">@context.MolWorkPermitNo</MudTd>
+                        <MudTd DataLabel="@localizer["_Visa"]">@context.VisaType</MudTd>
+                        <MudTd DataLabel="@localizer["_Country"]">@context.Country</MudTd>
+                        <MudTd DataLabel="@localizer["_Passport"]">@context.PassportNo</MudTd>
+                        <MudTd DataLabel="@localizer["_Name"]">@context.GivenName</MudTd>
+                        <MudTd DataLabel="@localizer["_UpdatedOn"]">@context.ModifiedDate.ToString(OvmcFormat.DATETIMEFORMAT)</MudTd>
+                        <MudTd DataLabel="@localizer["_RequestStatus"]">
+                            <MudChip T="string" Variant="Variant.Filled"
+                                Color="@RequestStatusColor.GetStatusColor(context.RequestStatus)"
+                                Size="Size.Small">
+                                @context.RequestStatus
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="@localizer["_PaymentStatus"]">
+                            <MudChip T="string" Variant="Variant.Filled"
+                                Color="@RequestStatusColor.GetStatusColor(context.PaymentStatus)"
+                                Size="Size.Small">
+                                @context.PaymentStatus
+                            </MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudText Color="Color.Secondary">
+                    @localizer.Html("_NoRecentRequestsFoundMessage")
+                </MudText>
+            }
+
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDivider Class="my-4" />
+<MudText Typo="Typo.h6" GutterBottom="true">@localizer.Html("_ForHelpOrSupport")</MudText>
+<MudText Typo="Typo.body2">
+    @localizer.Html("_ContactUsMessage")
+</MudText>
+
+</MudPaper>
+
+@code {
+    private List<OvmcRequest> _ovmcRequests = new();
+
+    protected override async Task OnInitializedAsync()
+        => _ovmcRequests = await OvmcService.GetAllAsync();
+<<<<<<< HEAD
+
+    private async Task<bool> Payment(string molNo, string passport, string name, int id){
+        bool? confirm1 = await Dialog.ShowMessageBoxAsync(
+            localizer["_ProceedToPayment"],
+            localizer["_ProceedToPaymentMessage", molNo, passport, name],
+            yesText: localizer["_PayNow"],
+            noText: null,
+            cancelText: localizer["_PayLater"],
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
+
+            if (confirm1 == true)
+            {
+                var payment = await PaymentService.InitiatePaymentAsync(id);
+                if(payment != null){
+                    Counter = 60;
+                    isPaymentInProcess = true;
+                    await InvokeAsync(StateHasChanged);
+                    await jsRuntime.InvokeVoidAsync("openBankPayment", (string) payment.paymentUrl, (string) payment.encRequest, (string) payment.accessCode);
+
+                    for (; Counter > 0; Counter--){                
+                        await Task.Delay(1000);
+                        await InvokeAsync(StateHasChanged);
+                    }
+
+                    isPaymentInProcess = false;
+                    Counter = 60;
+                    _ovmcRequests = await OvmcService.GetAllAsync();
+                    await InvokeAsync(StateHasChanged);                    
+                } else {
+                    Snackbar.Add(localizer.Html("_PaymentFailedToInitiate"), Severity.Error);
+                    isPaymentInProcess = false;
+                }
+                StateHasChanged();
+                return true;
+            }
+        return false;
+    }
+=======
+>>>>>>> parent of d224af8 (changes - suggested by priya)
+}

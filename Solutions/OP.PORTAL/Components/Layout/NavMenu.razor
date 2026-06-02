@@ -1,0 +1,21 @@
+﻿@using OP.PORTAL.Helpers
+<MudNavMenu>
+    <MudNavLink Href="home" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@localizer["_Home"]</MudNavLink>
+    <MudNavLink Href="request" IconColor="Color.Success" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PostAdd">@localizer["_OvmcRequest"]</MudNavLink>    
+    <MudNavLink Href="history" IconColor="Color.Warning" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">@localizer["_OvmcHistory"]</MudNavLink>
+    <MudNavLink Href="https://omanpost.om" IconColor="Color.Error" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MedicalInformation" Target="_blank">@localizer["_OvmcAppointment"]</MudNavLink>
+</MudNavMenu>
+<MudSpacer />
+<MudChip T="string" Icon="@Icons.Material.Filled.Logout" Color="Color.Primary" IconColor="Color.Error" Variant="Variant.Outlined" Class="" OnClick="@OnLogoutClicked">@localizer["_Logout"]</MudChip>
+
+@code {
+    [Parameter]
+    public EventCallback OnLogout { get; set; }
+
+    private async Task OnLogoutClicked()
+    {
+        if (OnLogout.HasDelegate)
+            await OnLogout.InvokeAsync(null);
+    }
+}
+

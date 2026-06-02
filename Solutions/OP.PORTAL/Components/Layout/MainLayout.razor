@@ -1,0 +1,219 @@
+﻿@using OP.PORTAL.Helpers
+@inherits LayoutComponentBase
+
+<MudRTLProvider RightToLeft="@LayoutHelper.RightToLeft">
+    <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    
+@if(isAuthenticated){
+    <AuthorizeView>
+         <Authorized>
+
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            </MudHidden>
+            <MudImage Src="oman_logo.png" Alt="Oman Post" Height="40" Elevation="0" Class="ml-3 mr-5 rounded-lg"/>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudMenuItem Icon="@Icons.Material.Filled.Home" Label="@localizer["_Home"]" Href="home" Style="width: fit-content; white-space: nowrap;"/>
+                <MudMenuItem Icon="@Icons.Material.Filled.PostAdd" IconColor="Color.Success" Label="@localizer["_OvmcRequest"]" Href="request"  Style="width: fit-content; white-space: nowrap;"/>
+                <MudMenuItem Icon="@Icons.Material.Filled.History" IconColor="Color.Warning" Label="@localizer["_OvmcHistory"]" Href="history"  Style="width: fit-content; white-space: nowrap;"/> 
+                <MudMenuItem Icon="@Icons.Material.Filled.MedicalInformation" IconColor="Color.Error" Label="@localizer["_OvmcAppointment"]" Href="https://omanpost.om" 
+                        Target="_blank" Style="width: fit-content; white-space: nowrap;"/>           
+            </MudHidden>
+            <MudSpacer />      
+            <MudMenu Dense="true" AnchorOrigin="Origin.BottomCenter"
+                     TransformOrigin="Origin.TopCenter">
+                <ActivatorContent Context="Lang">
+                    <MudTooltip Text="@localizer["_Language"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+                        <MudIconButton Icon="@Icons.Material.Filled.GTranslate" Color="Color.Secondary"/> 
+                    </MudTooltip> 
+                </ActivatorContent>
+                <ChildContent>    
+                    <MudMenuItem OnClick="@((e) => SetCulture("en-US"))">
+                        <ActivatorContent Context="ItemEn">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
+                                 height="12" class="mr-2" />
+                           @localizer["_LanguageEnglish"]
+                        </ActivatorContent>
+                    </MudMenuItem>
+                    <MudMenuItem OnClick="@((e) => SetCulture("ar-OM"))">
+                        <ActivatorContent Context="ItemAr">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
+                                 height="12" class="mr-2" />
+                           @localizer["_LanguageArabic"]
+                        </ActivatorContent>
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            <MudTooltip Text="@localizer["_Help"]" Color="Color.Warning" Placement="Placement.Bottom" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Warning" Href="help" Target="_blank"/> 
+            </MudTooltip>
+            <MudMenu Dense="true" AnchorOrigin="Origin.BottomLeft"
+                     TransformOrigin="Origin.TopCenter"> 
+                <ActivatorContent Context="UserContext">
+                    <MudTooltip Text="@localizer["_User"]" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+                        <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" Color="Color.Secondary"/> 
+                    </MudTooltip> 
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Info" Label="@localizer["_Profile"]" Href="profile" />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" Label="@localizer["_Logout"]" OnClick="@((e) => Logout())"/>            
+                </ChildContent>
+            </MudMenu>
+            @* <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/> *@            
+        </MudAppBar>        
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+                <NavMenu OnLogout="Logout" />
+            </MudDrawer>
+        </MudHidden>
+        <MudMainContent Class="pt-16 pa-1">
+            @Body
+        </MudMainContent>
+    </MudLayout>
+        </Authorized>    
+        <Authorizing>
+            <PageLoading />
+        </Authorizing>
+    </AuthorizeView>
+}else{
+    <PageLoading />
+}
+</MudRTLProvider>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool isAuthenticated = false;
+    private bool _rightToLeft = false;
+    private bool _drawerOpen = false;
+    private bool _isDarkMode = false;
+    private MudTheme? _theme = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitializedAsync();
+
+        _theme = new()
+        {
+            PaletteLight = _lightPalette,
+            PaletteDark = _darkPalette,
+            LayoutProperties = new LayoutProperties
+            {
+                DefaultBorderRadius = "8px"
+            }
+        };
+
+        _culture = CultureInfo.CurrentCulture;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        isAuthenticated = await TokenHelper.IsAuthenticated();
+        if (!isAuthenticated)
+        {
+            navigator.NavigateTo($"");
+        }        
+
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+        
+    }
+
+    private CultureInfo _culture {
+        get {
+            return CultureInfo.CurrentCulture;
+        }
+        set {
+            if (value != null && value != CultureInfo.CurrentCulture)
+            {
+                var uri = new Uri(navigator.Uri)
+                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscape = Uri.EscapeDataString(value.Name);
+                var uriEscape = Uri.EscapeDataString(uri);
+
+               navigator.NavigateTo($"Culture/Set?culture={cultureEscape}&redirectUri={uriEscape}", forceLoad: true);
+            }
+        }
+    }
+
+    void SetCulture(string culture)
+    {
+        if(_culture.Name != culture)
+            _culture = new CultureInfo(culture);
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+    private readonly PaletteLight _lightPalette = new()
+    {
+        Primary = "#41b6e6",             // Your main color
+        Secondary = "#00acc1",           // Complementary
+        AppbarBackground = "#ffffff",    // White appbar
+        AppbarText = "#212121",          // Dark text
+        Background = "#f0f2f5",          // Light page background
+        Surface = "#ffffff",              // Cards and surfaces
+        DrawerBackground = "#ffffff",
+        DrawerText = "#212121",
+        DrawerIcon = "#41b6e6",
+        TextPrimary = "#212121",
+        TextSecondary = "#555555",
+        ActionDefault = "#41b6e6",
+        ActionDisabled = "#9e9e9e",
+        Success = "#4caf50",
+        Info = "#2196f3",
+        Warning = "#ff9800",
+        Error = "#f44336"
+    };
+
+    private readonly PaletteDark _darkPalette = new()
+    {
+        Primary = "#41b6e6",             // Main color stays same
+        Secondary = "#00acc1",
+        AppbarBackground = "#1e1e1e",    // Dark appbar
+        AppbarText = "#ffffff",          // White text
+        Background = "#121212",          // Dark background
+        Surface = "#1e1e1e",             // Cards/surfaces
+        DrawerBackground = "#1b1b1b",
+        DrawerText = "#ffffff",
+        DrawerIcon = "#41b6e6",
+        TextPrimary = "#ffffff",
+        TextSecondary = "#bbbbbb",
+        ActionDefault = "#41b6e6",
+        ActionDisabled = "#555555",
+        Success = "#4caf50",
+        Info = "#2196f3",
+        Warning = "#ffb74d",
+        Error = "#ef5350"
+    };
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.AutoMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+
+    public async Task Logout(){
+        await AuthService.LogoutAsync();
+    }
+}
+
+

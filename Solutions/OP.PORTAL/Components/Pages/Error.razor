@@ -1,0 +1,29 @@
+﻿@page "/Error"
+@using System.Diagnostics
+
+<MudPaper Elevation="2" Class="pa-6 rounded-2xl">
+    <MudGrid Class="mt-2 mb-2" Justify="Justify.Center" Spacing="3">
+        <MudText Typo="Typo.h3" GutterBottom Color="Color.Error">                            
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" 
+                    Color="Color.Error" 
+                    Size="Size.Large" />
+                @localizer.Html("_ErrorPageMessage")
+        </MudText>
+
+        <MudText Typo="Typo.body1" Class="mb-6">
+            @localizer.Html("_ErroroDetails")
+        </MudText>
+
+        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                    OnClick="GoBack" StartIcon="@Icons.Material.Filled.ArrowBack">
+            @localizer["_GoBack"]
+        </MudButton>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private void GoBack()
+    {
+        navigator.NavigateTo("", forceLoad: false);
+    }
+}

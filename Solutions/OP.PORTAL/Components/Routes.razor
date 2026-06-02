@@ -1,0 +1,28 @@
+﻿<CascadingAuthenticationState>
+    <CascadingValue Value="LayoutHelper">
+        <Router AppAssembly="typeof(Program).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                @* <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                <FocusOnNavigate RouteData="routeData" Selector="h1" /> *@
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(Layout.MainLayout)" >
+                    <Denied />            
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingValue>
+</CascadingAuthenticationState>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LayoutHelper.OnChange += ForceReload;
+    }
+
+    private void ForceReload()
+    {
+        InvokeAsync(StateHasChanged); // 🔥 full re-render
+    }
+}

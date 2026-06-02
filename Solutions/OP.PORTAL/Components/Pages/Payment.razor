@@ -1,0 +1,60 @@
+﻿@page "/payment-status/{encidt}"
+@layout Layout.EmptyLayout
+@inject IHttpContextAccessor HttpContextAccessor
+
+<MudPaper Elevation="2" Class="pa-6 rounded-2xl">
+    <MudGrid Class="mt-2 mb-2" Justify="Justify.Center" Spacing="3">
+        @if (ovmcPayment == null)
+        {
+            @localizer.Html("_PaymentLoadingMessage")
+        }
+        else
+        {
+            <MudPaper Class="pa-4" style="text-transform: uppercase;">
+                <MudAlert Elevation="3" Severity="@(OvmcPaymentStatus.IsPaymentSuccess(ovmcPayment.Status) ? Severity.Success : Severity.Error)">
+                    @localizer.Html("_PaymentStatusMessage", ovmcPayment.Status)                    
+                </MudAlert>
+                <MudSimpleTable Elevation="3" Dense="true" Hover="true" Bordered="true" Striped="true" Style="overflow-x: auto;" Class="mt-2">
+                    <thead>
+                        <tr>
+                            <th colspan="2">@localizer.Html("_OrderNumber", ovmcPayment.OrderNo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>@localizer.Html("_OrderID")</td><td>@ovmcPayment.OrderNo</td></tr>
+                        <tr><td>@localizer.Html("_TrackingId")</td><td>@ovmcPayment.TrackingId</td></tr>
+                        <tr><td>@localizer.Html("_Currency")</td><td>@localizer.Html("_OMR")</td></tr>
+                        <tr><td>@localizer.Html("_Amount")</td><td>@ovmcPayment.Amount.ToString(OvmcFormat.AMOUNTFORMAT)</td></tr>
+                        <tr><td>@localizer.Html("_Status")</td><td>@ovmcPayment.Status</td></tr>
+                        <tr><td>@localizer.Html("_BankStatus")</td><td>@ovmcPayment.BankStatusCode</td></tr>
+                        <tr><td>@localizer.Html("_BankMessage")</td><td>@ovmcPayment.BankStatusMessage</td></tr>
+                        <tr><td>@localizer.Html("_PaymentDate")</td><td>@ovmcPayment.CreatedDate.ToString(OvmcFormat.DATETIMEFORMAT)</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        }
+
+        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                    OnClick="GoBack" StartIcon="@Icons.Material.Filled.ArrowBack">
+            @localizer["_GoBack"]
+        </MudButton>
+        
+    </MudGrid>
+</MudPaper>
+@code {
+    [Parameter] public string encidt { get; set; }
+    private OvmcPayment? ovmcPayment = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(!string.IsNullOrEmpty(encidt)){
+            string orderId = AesHelper.DecryptUrl(encidt);
+            ovmcPayment = await PaymentService.GetPaymentAsync(orderId);
+       }
+    }
+
+    private void GoBack()
+    {
+        navigator.NavigateTo("history", forceLoad: false);
+    }
+}

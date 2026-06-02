@@ -1,0 +1,58 @@
+﻿<MudDialog>
+    <TitleContent>
+        @localizer.Html("_PrintDialogTitle")
+    </TitleContent>
+    <DialogContent>
+        <div style="border: 1px solid lightgray; padding: 5px;" id="printSection">
+        <MudSimpleTable Elevation="3" Dense="true" Hover="true" Bordered="true" Striped="true" Style="margin:auto; " Class="mt-2">
+            <thead>
+                <tr>
+                    <th colspan="2">OVMC Portal</th>
+                </tr>
+                <tr>
+                    <th>@localizer.Html("_MoLWpn")</th>
+                    <th>@SelectedOvmcRequest.MolWorkPermitNo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>@localizer.Html("_Country")</td><td>@SelectedOvmcRequest.Country</td></tr>
+                <tr><td>@localizer.Html("_VisaType")</td><td>@SelectedOvmcRequest.VisaType</td></tr>
+                <tr><td>@localizer.Html("_PassportNo")</td><td>@SelectedOvmcRequest.PassportNo</td></tr>
+                <tr><td>@localizer.Html("_GivenName")</td><td>@SelectedOvmcRequest.GivenName</td></tr>
+                <tr><td>@localizer.Html("_Surname")</td><td>@SelectedOvmcRequest.Surname</td></tr>
+                <tr><td>@localizer.Html("_PhoneNo")</td><td>@SelectedOvmcRequest.PhoneNo</td></tr>
+                <tr><td>@localizer.Html("_DateOfBirth")</td><td>@SelectedOvmcRequest.DateOfBirth?.ToString(OvmcFormat.DATEFORMAT)</td></tr>
+                <tr>
+                    <td colspan="2" style="text-align:center;">
+                        @if (!string.IsNullOrEmpty(barcodeImage))
+                        {
+                            <img src="@barcodeImage" style="margin-top:10px; max-height:100px"/>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Print">@localizer["_Print"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string barcodeImage;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public OvmcRequest SelectedOvmcRequest { get; set; }
+
+    protected override void OnInitialized()
+    {
+        barcodeImage = BarcodeService.GenerateBase64(SelectedOvmcRequest.OvmcUrnNumber);
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Print()
+    {
+        await jsRuntime.InvokeVoidAsync("printHtml", "printSection");
+    }
+}

@@ -1,0 +1,10 @@
+﻿@page "/logout"
+@layout Layout.EmptyLayout
+
+<MudPaper Class="ma-1 pa-4" Elevation="0">
+    <MudText Typo="Typo.h4" GutterBottom="true">@localizer.Html("_ThankYouMessage")</MudText>
+    <MudText Typo="Typo.body1" GutterBottom="true">
+        @localizer.Html("_ThankYouDetails")
+    </MudText>
+    <MudLink Href="">@localizer["_LoginAgain"]</MudLink>
+</MudPaper>

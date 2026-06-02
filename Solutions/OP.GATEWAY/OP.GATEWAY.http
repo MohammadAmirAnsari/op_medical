@@ -1,0 +1,6 @@
+@OP.GATEWAY_HostAddress = http://localhost:5075
+
+GET {{OP.GATEWAY_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
