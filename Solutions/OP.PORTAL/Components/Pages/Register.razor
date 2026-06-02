@@ -56,12 +56,6 @@
                                         Validation="OvmcValidator.OnlyNumber(6, 8)"
                                         OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.NationalId)))"
                                         OnlyValidateIfDirty="true"/>
-<<<<<<< HEAD
-
-=======
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
->>>>>>> parent of d224af8 (changes - suggested by priya)
                                     <MudSelect 
                                         @bind-Value="model.SponsorType" 
                                         For="@(() => model.SponsorType)"
@@ -96,7 +90,6 @@
                                             </MudSelectItem>
                                         }
                                     </MudSelect>
-<<<<<<< HEAD
                                 </MudPaper>
                             </MudItem>
                             <MudItem xs="6">
@@ -125,35 +118,6 @@
                                                     @(IsOtpSent ? localizer["_ResendOtp", Counter] : localizer["_SendOtp"])
                                                 </MudButton>
                                             </MudItem>
-=======
-                                </MudItem>                                     
-                                <MudItem xs="12" sm="6">                                    
-                                     <MudGrid Spacing="1">
-                                        <MudItem xs="7">                                            
-                                            <MudTextField 
-                                                    @ref="_phoneField"
-                                                    @bind-Value="model.PhoneNo" 
-                                                    For="@(() => model.PhoneNo)"
-                                                    Label="@localizer["_SponsorsPhoneNo"]"
-                                                    HelperText="@localizer["_SponsorPhoneNoHelperText"]"
-                                                    Placeholder="@localizer["_SponsorPhoneNoPlaceholder"]"
-                                                    Mask="@(new PatternMask("00000000"))"
-                                                    Variant="Variant.Outlined"
-                                                    Dense="true" ShrinkLabel 
-                                                    Margin="Margin.Dense"
-                                                    Immediate="false"
-                                                    OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.PhoneNo)))"
-                                                    OnlyValidateIfDirty="true"/>
-                                        </MudItem>
-                                        <MudItem xs="5" Class="justify-center align-center pa-3">                                            
-                                            <MudButton Variant="Variant.Outlined" Disabled="@IsOtpSent"
-                                                       Color="Color.Primary"
-                                                       FullWidth
-                                                       OnClick="SendOtp">
-                                                @(IsOtpSent ? localizer["_ResendOtp", Counter] : localizer["_SendOtp"])
-                                            </MudButton>
-                                        </MudItem>
->>>>>>> parent of d224af8 (changes - suggested by priya)
                                     </MudGrid>
                                 </MudItem>                                                                  
                                 <MudItem xs="12" sm="6">
@@ -202,7 +166,6 @@
                                         Dense="true" ShrinkLabel 
                                         Margin="Margin.Dense"
                                         Immediate="false"
-<<<<<<< HEAD
                                         OnlyValidateIfDirty="true"
                                         Adornment="Adornment.End" 
                                         AdornmentIcon="@PasswordInputIcon2" 
@@ -210,11 +173,6 @@
                                 </MudPaper>
                             </MudItem>
                        </MudGrid>
-=======
-                                        OnlyValidateIfDirty="true"/>   
-                                </MudItem>
-                        </MudGrid>
->>>>>>> parent of d224af8 (changes - suggested by priya)
                     </MudCardContent>
                     <MudCardActions>
                         <MudGrid Spacing="1">

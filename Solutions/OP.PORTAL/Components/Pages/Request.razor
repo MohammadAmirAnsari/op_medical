@@ -331,7 +331,6 @@
                                 Variant="Variant.Outlined"
                                 Dense="true" ShrinkLabel 
                                 Margin="Margin.Dense"
-<<<<<<< HEAD
                                 Immediate="false"    
                                 Class="text-uppercase mb-3"                         
                                 Validation="OvmcValidator.Email"
@@ -339,16 +338,6 @@
                                 OnlyValidateIfDirty="true"/>
 
                     <MudTextField InputType="InputType.Number"
-=======
-                                Immediate="false"                                                                                                
-                                Validation="OvmcValidator.NoArabic"
-                                OnBlur="@(() => OvmcValidator.UppercaseField(model, nameof(model.Email)))"
-                                OnlyValidateIfDirty="true"/>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField 
-                                Mask="@(new PatternMask("00000000000000"))"
->>>>>>> parent of d224af8 (changes - suggested by priya)
                                 @bind-Value="model.PhoneNo" 
                                 For="@(() => model.PhoneNo)"
                                 Label="@localizer["_ApplicantPhoneNo"]"

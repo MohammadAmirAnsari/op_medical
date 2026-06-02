@@ -74,15 +74,11 @@
             <MudTd>
                 <MudChip T="string" Icon="@Icons.Material.Filled.RemoveRedEye" IconColor="Color.Warning" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" 
                     OnClick="@(() => ShowBtnPress(context.Id))">@localizer["_View"]</MudChip> 
-<<<<<<< HEAD
 
                 @if(!string.IsNullOrEmpty(context.OvmcUrnNumber)){
                     <MudChip T="string" Icon="@Icons.Material.Filled.Print" IconColor="Color.Dark" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Dark" 
                         OnClick="@(() => Print(context))">@localizer["_Print"]</MudChip>
                 }
-
-=======
->>>>>>> parent of d224af8 (changes - suggested by priya)
                 @if(!(context.RequestStatus != OvmcRequestStatus.SUBMITTED)){
                     <MudChip T="string" Icon="@Icons.Material.Filled.Edit" IconColor="Color.Primary" Size="Size.Small" 
                         Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => EditRequest(context.Id))">@localizer["_Edit"]</MudChip>              
@@ -285,7 +281,6 @@
         return false;
     }
 
-<<<<<<< HEAD
     private async Task Schedule(string urnno){
         var options = new DialogOptions
         {
@@ -302,11 +297,6 @@
 
         var dialog = await Dialog.ShowAsync<ScheduleDialog>("Schedule", parameters, options);
         var result = await dialog.Result;
-=======
-    private async Task Schedule(string grnno){
-        scheduleGrnNumber = grnno;
-        isScheduleClicked = true;
->>>>>>> parent of d224af8 (changes - suggested by priya)
     }
 
     private async Task HideSchedule(){        
