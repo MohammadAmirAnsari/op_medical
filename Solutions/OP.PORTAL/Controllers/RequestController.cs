@@ -69,6 +69,11 @@ namespace OP.PORTAL.Controllers
                 return ValidationProblem(ModelState);
             }
 
+            if(payload.Count == 1)
+            {
+                return Ok(new { success = true, message = "No data to update." });
+            }
+
             var (isValid, key, errorMessage) = await _ovmcRequestService.PatchByUrnDataAsync_New(payload);
 
             if (!isValid)
