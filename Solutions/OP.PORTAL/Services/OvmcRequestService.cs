@@ -204,11 +204,15 @@ namespace OP.PORTAL.Services
 
             // we can edit the record only if the status are not COMPLETED or INPROCESS
             var existingRecord = await _db.OvmcRequests.FirstOrDefaultAsync(r =>
-                r.OvmcUrnNumber.Equals(urn) &&
-                !(new[] { OvmcRequestStatus.COMPLETED, OvmcRequestStatus.INPROCESS }.Contains(r.RequestStatus))
+                r.OvmcUrnNumber.Equals(urn)
             );
 
-            if (existingRecord == null) return (false, "OvmcUrnNumber", "Record Not Found or cannot be updated.");
+            if (existingRecord == null) return (false, "OvmcUrnNumber", "Record Not Found.");
+
+            if (existingRecord.RequestStatus == OvmcRequestStatus.COMPLETED || existingRecord.RequestStatus == OvmcRequestStatus.INPROCESS)
+                return (false, "OvmcUrnNumber", "Record cannot be updated.");
+
+            
 
             // we cannot update passport number if the status is SUBMITTED and payment is SUCCESS
             if (existingRecord.RequestStatus == OvmcRequestStatus.SUBMITTED && existingRecord.PaymentStatus == OvmcPaymentStatus.SUCCESS)
@@ -236,7 +240,7 @@ namespace OP.PORTAL.Services
 
                 var attr = new OnlyNumberAttribute(8, 8);
                 var res = attr.GetValidationResult(val, context);
-                if (res != ValidationResult.Success) return (false, "VisaType", res?.ErrorMessage ?? "Invalid Work Permit Number.");
+                if (res != ValidationResult.Success) return (false, "MolWorkPermitNo", res?.ErrorMessage ?? "Invalid Work Permit Number.");
                 existingRecord.MolWorkPermitNo = val;
             }
 
