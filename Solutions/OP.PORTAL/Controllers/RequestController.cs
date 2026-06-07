@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using OP.PORTAL.Helpers;
 using OP.PORTAL.Models;
 using OP.PORTAL.Services;
+using System.Text.Json.Nodes;
 
 namespace OP.PORTAL.Controllers
 {
@@ -58,5 +59,26 @@ namespace OP.PORTAL.Controllers
             else
                 return BadRequest(new { success = false, message = "Ovmc Request Update Failed." });
         }
+
+        [HttpPatch("UpdateData")]
+        public async Task<IActionResult> UpdateUserData([FromBody] JsonObject payload)
+        {
+            if (payload is null || !payload.ContainsKey("OvmcUrnNumber"))
+            {
+                ModelState.AddModelError("OvmcUrnNumber", "This field must not be empty.");
+                return ValidationProblem(ModelState);
+            }
+
+            var (isValid, key, errorMessage) = await _ovmcRequestService.PatchByUrnDataAsync_New(payload);
+
+            if (!isValid)
+            {
+                ModelState.AddModelError(key, errorMessage);
+                return ValidationProblem(ModelState);
+            }
+
+            return Ok(new { success = true, message = "Ovmc Request Updated Successfully." });
+        }
+
     }
 }
