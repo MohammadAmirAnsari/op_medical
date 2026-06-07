@@ -7,6 +7,8 @@ using OP.PORTAL.Models;
 using System;
 using System.Collections;
 using System.Diagnostics.Metrics;
+using System.Text.Json.Nodes;
+using System.ComponentModel.DataAnnotations;
 
 namespace OP.PORTAL.Services
 {
@@ -21,6 +23,7 @@ namespace OP.PORTAL.Services
         Task<int> UpdateByUrnDataAsync(string urnNumber, OvmcRequestDto request);
         Task<int> DeleteAsync(int id);
         Task<int> PaymentSuccess(int id, string urnNumber);
+        Task<(bool IsValid, string Key, string Message)> PatchByUrnDataAsync_New(JsonObject request);
     }
 
     public class OvmcRequestService : IOvmcRequestService
@@ -183,14 +186,166 @@ namespace OP.PORTAL.Services
                 product.MaritalStatus = request.MaritalStatus;
                 product.PhoneNo = request.PhoneNo;
                 product.Email = request.Email;
-                
-                
+
+
                 _db.OvmcRequests.Update(product);
                 return await _db.SaveChangesAsync();
             }
             return 0;
         }
-    
+
+
+        public async Task<(bool IsValid, string Key, string Message)> PatchByUrnDataAsync_New(JsonObject payload)
+        {
+            using var _db = _contextFactory.CreateDbContext();
+
+            var urn = payload["OvmcUrnNumber"]?.ToString();
+            if (string.IsNullOrEmpty(urn)) return (false, "OvmcUrnNumber", "OvmcUrnNumber is required.");
+
+            // we can edit the record only if the status are not COMPLETED or INPROCESS
+            var existingRecord = await _db.OvmcRequests.FirstOrDefaultAsync(r =>
+                r.OvmcUrnNumber.Equals(urn) &&
+                !(new[] { OvmcRequestStatus.COMPLETED, OvmcRequestStatus.INPROCESS }.Contains(r.RequestStatus))
+            );
+
+            if (existingRecord == null) return (false, "OvmcUrnNumber", "Record Not Found or cannot be updated.");
+
+            // we cannot update passport number if the status is SUBMITTED and payment is SUCCESS
+            if (existingRecord.RequestStatus == OvmcRequestStatus.SUBMITTED && existingRecord.PaymentStatus == OvmcPaymentStatus.SUCCESS)
+            {
+                if (payload.ContainsKey("PassportNo"))
+                    return (false, "PassportNo", "Passport number cannot be updated after successful submission.");
+            }
+
+            existingRecord.ModifiedDate = DateTime.Now;
+            var context = new ValidationContext(existingRecord);
+
+            // VisaType
+            if (payload.ContainsKey("VisaType"))
+            {
+                var val = payload["VisaType"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "VisaType", "VisaType cannot be empty.");
+                existingRecord.VisaType = val;
+            }
+
+            // MolWorkPermitNo
+            if (payload.ContainsKey("MolWorkPermitNo"))
+            {
+                var val = payload["MolWorkPermitNo"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "MolWorkPermitNo", "MolWorkPermitNo cannot be empty.");
+
+                var attr = new OnlyNumberAttribute(8, 8);
+                var res = attr.GetValidationResult(val, context);
+                if (res != ValidationResult.Success) return (false, "VisaType", res?.ErrorMessage ?? "Invalid Work Permit Number.");
+                existingRecord.MolWorkPermitNo = val;
+            }
+
+            // City
+            if (payload.ContainsKey("City"))
+            {
+                var val = payload["City"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "City", "City cannot be empty.");
+                existingRecord.City = val;
+            }
+
+            // PassportIssuePlace
+            if (payload.ContainsKey("PassportIssuePlace"))
+            {
+                var val = payload["PassportIssuePlace"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "PassportIssuePlace", "PassportIssuePlace cannot be empty.");
+
+                var attr = new NoArabicAttribute();
+                var res = attr.GetValidationResult(val, context);
+                if (res != ValidationResult.Success) return (false, "PassportIssuePlace", res?.ErrorMessage ?? "Arabic characters not allowed.");
+                existingRecord.PassportIssuePlace = val;
+            }
+
+            // PassportIssueDate
+            if (payload.ContainsKey("PassportIssueDate"))
+            {
+                var val = payload["PassportIssueDate"]?.ToString();
+                if (!DateTime.TryParse(val, out DateTime date)) return (false, "PassportIssueDate", "Invalid PassportIssueDate format.");
+                existingRecord.PassportIssueDate = date;
+            }
+
+            // PassportExpiryDate
+            if (payload.ContainsKey("PassportExpiryDate"))
+            {
+                var val = payload["PassportExpiryDate"]?.ToString();
+                if (!DateTime.TryParse(val, out DateTime date)) return (false, "PassportExpiryDate", "Invalid PassportExpiryDate format.");
+
+                var attr = new PassportExpiryDateAttribute();
+                var res = attr.GetValidationResult(date, context);
+                if (res != ValidationResult.Success) return (false, "PassportExpiryDate", res?.ErrorMessage ?? "Invalid Expiry Date.");
+                existingRecord.PassportExpiryDate = date;
+            }
+
+            // GivenName
+            if (payload.ContainsKey("GivenName"))
+            {
+                var val = payload["GivenName"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "GivenName", "GivenName cannot be empty.");
+                existingRecord.GivenName = val;
+            }
+
+            // Surname
+            if (payload.ContainsKey("Surname"))
+            {
+                var val = payload["Surname"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "Surname", "Surname cannot be empty.");
+                existingRecord.Surname = val;
+            }
+
+            // DateOfBirth
+            if (payload.ContainsKey("DateOfBirth"))
+            {
+                var val = payload["DateOfBirth"]?.ToString();
+                if (!DateTime.TryParse(val, out DateTime date)) return (false, "DateOfBirth", "Invalid DateOfBirth format.");
+
+                var attr = new DateOfBirthAttribute();
+                var res = attr.GetValidationResult(date, context);
+                if (res != ValidationResult.Success) return (false, "DateOfBirth", res?.ErrorMessage ?? "Invalid DateOfBirth.");
+
+                existingRecord.DateOfBirth = date;
+            }
+
+            // Gender
+            if (payload.ContainsKey("Gender"))
+            {
+                var val = payload["Gender"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "Gender", "Gender cannot be empty.");
+
+                var attr = new GenderCheckAttribute();
+                var res = attr.GetValidationResult(val, context);
+                if (res != ValidationResult.Success) return (false, "Gender", res?.ErrorMessage ?? "Invalid Gender.");
+                existingRecord.Gender = val;
+            }
+
+            // PhoneNo
+            if (payload.ContainsKey("PhoneNo"))
+            {
+                var val = payload["PhoneNo"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "PhoneNo", "PhoneNo cannot be empty.");
+                if (!new PhoneAttribute().IsValid(val)) return (false, "PhoneNo", "Invalid Phone format.");
+                existingRecord.PhoneNo = val;
+            }
+
+            // Email
+            if (payload.ContainsKey("Email"))
+            {
+                var val = payload["Email"]?.ToString();
+                if (string.IsNullOrWhiteSpace(val)) return (false, "Email", "Email cannot be empty.");
+                if (!new EmailAddressAttribute().IsValid(val)) return (false, "Email", "Invalid Email format.");
+                existingRecord.Email = val;
+            }
+
+            if (payload.ContainsKey("PassportNo")) existingRecord.PassportNo = payload["PassportNo"]?.ToString() ?? string.Empty;
+            if (payload.ContainsKey("MaritalStatus")) existingRecord.MaritalStatus = payload["MaritalStatus"]?.ToString() ?? string.Empty;
+
+            // Database save operation
+            var rowsAffected = await _db.SaveChangesAsync();
+            return rowsAffected > 0 ? (true, "Success", "Success") : (false, "Failure", "No changes detected or updated.");
+        }
 
         public async Task<int> UpdateByUrnAsync(OvmcRequestStatusDto request)
         {
