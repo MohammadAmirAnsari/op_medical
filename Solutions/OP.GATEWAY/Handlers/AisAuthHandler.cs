@@ -1,15 +1,20 @@
 ﻿using OP.GATEWAY.Helpers;
 using OP.GATEWAY.Models;
 using OP.GATEWAY.Services;
+using OP.GATEWAY.Data;
 using System.Security.Claims;
+using System.Text.Json.Nodes;
+using Microsoft.EntityFrameworkCore;
 
 namespace OP.GATEWAY.Handlers
 {
-    public class AisAuthHandler(IHttpContextAccessor httpContextAccessor, IAuthService authService, ILogService logService) : DelegatingHandler
+    public class AisAuthHandler(IHttpContextAccessor httpContextAccessor, IAuthService authService, ILogService logService, IServiceProvider serviceProvider) : DelegatingHandler
     {
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IAuthService _authService = authService;
         private readonly ILogService _logService = logService;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
+
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
@@ -76,7 +81,23 @@ namespace OP.GATEWAY.Handlers
                     LogTime = DateTime.UtcNow
                 };
 
-                _ = Task.Run(async () => await _logService.ApiLog(UserType.AIS, newLog), cancellationToken);
+                var jsonDoc = JsonNode.Parse(requestBody);
+                string MedicalStatus = jsonDoc?["status"]?.ToString() ?? string.Empty;
+                string OvmcUrnNumber = jsonDoc?["gCCSlipNo"]?.ToString() ?? string.Empty;
+
+                _ = Task.Run(async () =>
+                {
+                    await _logService.ApiLog(UserType.AIS, newLog);
+
+                    // update medical status
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<GatewayDbContext>();
+
+                    string sqlQuery = "UPDATE `portal_requests` SET `MedicalStatus` = {0} WHERE `OvmcUrnNumber` = {1} ORDER BY `Id` DESC LIMIT 1;";
+
+                    await dbContext.Database.ExecuteSqlRawAsync(sqlQuery, MedicalStatus, OvmcUrnNumber);
+
+                }, cancellationToken);
             }
             catch (Exception ex)
             {

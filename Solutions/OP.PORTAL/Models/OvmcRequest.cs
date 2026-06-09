@@ -67,6 +67,9 @@ namespace OP.PORTAL.Models
         [Required(ErrorMessageResourceName = "ResxRequired", ErrorMessageResourceType = typeof(Resource))]
         public string PaymentStatus { get; set; } = OvmcPaymentStatus.PENDING;
 
+        [Required(ErrorMessageResourceName = "ResxRequired", ErrorMessageResourceType = typeof(Resource))]
+        public string MedicalStatus { get; set; } = OvmcMedicalStatus.PENDING;
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         
         public DateTime ModifiedDate { get; set; } = DateTime.Now;

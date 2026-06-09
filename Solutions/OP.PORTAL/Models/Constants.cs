@@ -251,6 +251,14 @@ namespace OP.PORTAL.Models
         }
     }
 
+    public static class OvmcMedicalStatus
+    {
+        public static readonly string FIT = "Fit";
+        public static readonly string UNFIT = "Unfit";
+        public static readonly string PENDING = "Pending";
+
+    }
+
     public static class RequestStatusColor
     {
         public static Color GetStatusColor(string status)
@@ -266,6 +274,9 @@ namespace OP.PORTAL.Models
                 "Success" => Color.Success,
                 "Shipped" => Color.Success,
                 "Completed" => Color.Success, 
+
+                "Unfit" => Color.Error, 
+                "Fit" => Color.Success, 
 
                 _ => Color.Error
             };

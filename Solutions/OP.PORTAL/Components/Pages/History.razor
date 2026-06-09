@@ -36,6 +36,7 @@
             </MudHidden>
             <MudTh>@localizer["_RequestStatus"]</MudTh>
             <MudTh>@localizer["_PaymentStatus"]</MudTh>        
+            <MudTh>@localizer["_MedicalStatus"]</MudTh>        
             <MudTh>@localizer["_UpdatedOn"]</MudTh>
             <MudTh>@localizer["_Actions"]</MudTh>
         </HeaderContent>
@@ -60,6 +61,13 @@
                     Color="@RequestStatusColor.GetStatusColor(context.PaymentStatus)"
                     Size="Size.Small">
                     @context.PaymentStatus
+                </MudChip>
+            </MudTd> 
+            <MudTd DataLabel="@localizer["_MedicalStatus"]">
+                <MudChip T="string" Variant="Variant.Filled"
+                    Color="@RequestStatusColor.GetStatusColor(context.MedicalStatus)"
+                    Size="Size.Small">
+                    @context.MedicalStatus
                 </MudChip>
             </MudTd> 
             <MudTd DataLabel="@localizer["_UpdatedOn"]">@context.ModifiedDate.ToString(OvmcFormat.DATETIMEFORMAT)</MudTd> 
