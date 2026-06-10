@@ -71,7 +71,7 @@ namespace OP.PORTAL.Controllers
 
             if(payload.Count == 1)
             {
-                return Ok(new { success = true, message = "No data to update." });
+                return Ok(new { success = true, message = "No records passed to update" });
             }
 
             var (isValid, key, errorMessage) = await _ovmcRequestService.PatchByUrnDataAsync_New(payload);
