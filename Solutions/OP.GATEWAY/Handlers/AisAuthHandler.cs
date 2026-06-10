@@ -82,7 +82,7 @@ namespace OP.GATEWAY.Handlers
                 };
 
                 var jsonDoc = JsonNode.Parse(requestBody);
-                string MedicalStatus = jsonDoc?["status"]?.ToString() ?? string.Empty;
+                string MedicalStatus = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(jsonDoc?["status"]?.ToString() ?? string.Empty);
                 string OvmcUrnNumber = jsonDoc?["gCCSlipNo"]?.ToString() ?? string.Empty;
 
                 _ = Task.Run(async () =>
