@@ -210,7 +210,7 @@ namespace OP.PORTAL.Services
             if (existingRecord == null) return (false, "OvmcUrnNumber", "Record Not Found.");
 
             if (existingRecord.RequestStatus == OvmcRequestStatus.COMPLETED || existingRecord.RequestStatus == OvmcRequestStatus.INPROCESS)
-                return (false, "OvmcUrnNumber", "Record cannot be updated.");
+                return (false, "OvmcUrnNumber", "Update not allowed. The record is already in '" + existingRecord.RequestStatus + "' status.");
 
             
 
@@ -348,7 +348,7 @@ namespace OP.PORTAL.Services
 
             // Database save operation
             var rowsAffected = await _db.SaveChangesAsync();
-            return rowsAffected > 0 ? (true, "Success", "Success") : (false, "Failure", "No changes detected or updated.");
+            return rowsAffected > 0 ? (true, "Success", "Success") : (false, "Failure", "Something went wrong. No changes detected or updated.");
         }
 
         public async Task<int> UpdateByUrnAsync(OvmcRequestStatusDto request)
