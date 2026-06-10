@@ -257,12 +257,25 @@ namespace OP.PORTAL.Models
         public static readonly string UNFIT = "Unfit";
         public static readonly string PENDING = "Pending";
 
+        public static string GetMedicalStatusText(string status)
+        {
+            status = char.ToUpper(status[0]) + status.Substring(1);
+            return status switch
+            {
+                "Fit" => "Fit",
+                "Unfit" => "Unfit",
+                "Pending" => "Pending",
+                _ => "Unknown"
+            };
+        }
+
     }
 
     public static class RequestStatusColor
     {
         public static Color GetStatusColor(string status)
         {
+            status = char.ToUpper(status[0]) + status.Substring(1);
             return status switch
             {
                 "Submitted" => Color.Primary,

@@ -67,7 +67,7 @@
                 <MudChip T="string" Variant="Variant.Filled"
                     Color="@RequestStatusColor.GetStatusColor(context.MedicalStatus)"
                     Size="Size.Small">
-                    @context.MedicalStatus
+                    @OvmcMedicalStatus.GetMedicalStatusText(context.MedicalStatus)
                 </MudChip>
             </MudTd> 
             <MudTd DataLabel="@localizer["_UpdatedOn"]">@context.ModifiedDate.ToString(OvmcFormat.DATETIMEFORMAT)</MudTd> 
