@@ -1,5 +1,19 @@
 ﻿@using OP.PORTAL.Helpers
+@using MudBlazor
+@using OP.PORTAL.Services
+@using OP.PORTAL.Components.Shared
 @inherits LayoutComponentBase
+@inject NavigationManager navigator
+@inject IStringLocalizer<AppResource> localizer
+
+<style>
+    .portal-lock-blur {
+        filter: blur(10px) grayscale(40%);
+        transition: filter 0.3s ease;
+        pointer-events: none !important;
+        user-select: none !important;
+    }
+</style>
 
 <MudRTLProvider RightToLeft="@LayoutHelper.RightToLeft">
     <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
@@ -11,7 +25,7 @@
     <AuthorizeView>
          <Authorized>
 
-    <MudLayout>
+    <MudLayout Class="@dynamic_blur_class">
         <MudAppBar Elevation="1">
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -70,10 +84,20 @@
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
 
+    
+    
+    private bool _isEmailVerified = true;
+    private bool _isModalOpen = false;
+    
+    private static bool _isLoggingOut = false;
+    
+    private string dynamic_blur_class => _isEmailVerified ? "" : "portal-lock-blur";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        
+        _isLoggingOut = false;
 
         _theme = new()
         {
@@ -89,10 +113,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_isLoggingOut) return;
+
         isAuthenticated = await TokenHelper.IsAuthenticated();
         if (!isAuthenticated)
         {
             navigator.NavigateTo($"");
+        }
+        else if (firstRender)
+        {
+            await CheckEmailVerificationStatus();
         }
 
         if (firstRender)
@@ -102,7 +132,60 @@
 
     }
 
+    private async Task CheckEmailVerificationStatus()
+    {
+        if (_isLoggingOut) return;
 
+        try
+        {
+            var profile = await SponsorService.GetProfile();
+            
+            if (_isLoggingOut) return;
+
+            if (profile != null)
+            {
+                _isEmailVerified = profile.IsEmailVerified;
+
+                if (!_isEmailVerified && !_isModalOpen)
+                {
+                    await InvokeAsync(async () => await OpenGlobalLockModal(profile));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Global Interceptor Exception: {ex.Message}");
+        }
+    }
+
+    private async Task OpenGlobalLockModal(SponsorProfile profile)
+    {
+        if (_isLoggingOut) return;
+        
+        _isModalOpen = true;
+        StateHasChanged();
+
+        var parameters = new DialogParameters<EmailRestrictionModal>
+        {
+            { x => x.SponsorId, profile.Id },
+            { x => x.UserEmail, profile.Email },
+            { x => x.UserName, profile.Name }
+        };
+
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = false, 
+            CloseButton = false, 
+            BackdropClick = false, 
+            MaxWidth = MaxWidth.Small, 
+            FullWidth = true 
+        };
+
+        var dialog = await Dialog.ShowAsync<EmailRestrictionModal>("Verification Required", parameters, options);
+        await dialog.Result;
+        
+        _isModalOpen = false;
+    }
 
     private void DrawerToggle()
     {
@@ -162,8 +245,16 @@
         false => Icons.Material.Outlined.DarkMode,
     };
 
-    public async Task Logout(){
-        await AuthService.LogoutAsync();
+    private async Task Logout()
+    {
+        _isLoggingOut = true;
+        
+        await TokenHelper.RemoveTokenAsync();
+
+        isAuthenticated = false;
+        _isModalOpen = false;
+        
+        navigator.NavigateTo("", forceLoad: true);
     }
 }
 

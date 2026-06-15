@@ -288,18 +288,28 @@
 
                 int rec = await SponsorService.AddAsync(model);
                 if(rec > 0) {
-                    bool? confirm1 = await Dialog.ShowMessageBoxAsync(
-                        localizer["_ProceedToLogin"],
-                        "",
-                        yesText: localizer["_Login"],
-                        cancelText: localizer["_Later"],
-                        options: new DialogOptions { MaxWidth = MaxWidth.Small, BackgroundClass = "my-custom-class" });
+                    string token = await SponsorService.GenerateAndSaveEmailTokenAsync(rec);
+                    
+                    string baseUrl = NavigationManager.BaseUri;
+
+                    string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
+                    
+                    _ = Task.Run(async () => await OP.PORTAL.Helpers.EmailHelper.SendMagicLinkAsync(model.Email, model.Name, magicLink));
+
+                    var parameters = new DialogParameters<EmailVerificationModal>();
+                    parameters.Add(x => x.UserEmail, model.Email);
+
+                    var options = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
+                    var dialog = await Dialog.ShowAsync<EmailVerificationModal>("Registration Successful!", parameters, options);
+                    var result = await dialog.Result;
 
                         navigator.NavigateTo("");
-                }
-                else Snackbar.Add(localizer["_RegistrationErrorMessage"], Severity.Error);
-
+                } 
+                else 
+                {
+                Snackbar.Add(localizer["_RegistrationErrorMessage"], Severity.Error);
                 await ResetRequestAsync();
+                }
             }        
         }
     }

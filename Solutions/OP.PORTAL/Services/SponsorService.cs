@@ -15,6 +15,8 @@ namespace OP.PORTAL.Services
         Task<int> UpdateProfileAsync(SponsorProfile profile);
         Task<int> UpdatePasswordAsync(SponsorResetPassword request);
         Task<bool> IsSponsorPhoneNoAlreadyRegistered(string phoneNo);
+        Task<string> GenerateAndSaveEmailTokenAsync(int sponsorId);
+        Task<bool> VerifyEmailTokenAsync(string token);
     }
 
     public class SponsorService : ISponsorService
@@ -24,12 +26,16 @@ namespace OP.PORTAL.Services
         private readonly AesEncryptionHelper _aesService;
         private readonly ISmsHelper _smsHelper;
 
-        public SponsorService(IDbContextFactory<AppDbContext> contextFactory, ITokenHelper appTokenHelper, AesEncryptionHelper aesService, ISmsHelper smsHelper)
+        private readonly IServiceProvider _serviceProvider;
+
+
+        public SponsorService(IDbContextFactory<AppDbContext> contextFactory, ITokenHelper appTokenHelper, AesEncryptionHelper aesService, ISmsHelper smsHelper,IServiceProvider serviceProvider)
         {
             _contextFactory = contextFactory;
             _aesService = aesService;
             _smsHelper = smsHelper;
             _appTokenHelper = appTokenHelper;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<List<Sponsor>> GetAllAsync()
@@ -53,7 +59,7 @@ namespace OP.PORTAL.Services
                 sponsor.NationalId = _aesService.Encrypt(sponsor.NationalId);
                 sponsor.PasswordHash = hasher.HashPassword(sponsor.PhoneNo, sponsor.PasswordHash);
                 _db.Sponsors.Add(sponsor);
-                return await _db.SaveChangesAsync();
+                return await _db.SaveChangesAsync() > 0 ? sponsor.Id : 0;
             }
             return 0;
         }
@@ -76,7 +82,8 @@ namespace OP.PORTAL.Services
                         PhoneNo = sponsor.PhoneNo,
                         Email = sponsor.Email,
                         City = sponsor.City,
-                        IsVerified = sponsor.IsVerified
+                        IsVerified = sponsor.IsVerified,
+                        IsEmailVerified = sponsor.IsEmailVerified
                     };
                 }
             }
@@ -127,5 +134,40 @@ namespace OP.PORTAL.Services
             }
             return 0;
         }
+
+        public async Task<string> GenerateAndSaveEmailTokenAsync(int sponsorId)
+        {
+            var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var sponsor = await dbContext.Sponsors.FindAsync(sponsorId);
+            if (sponsor != null)
+            {
+                sponsor.EmailVerificationToken = token;
+                sponsor.EmailTokenExpiry = DateTime.UtcNow.AddHours(24);
+                await dbContext.SaveChangesAsync();
+            }
+            return token;
+        }
+
+        public async Task<bool> VerifyEmailTokenAsync(string token)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var sponsor = await dbContext.Sponsors.FirstOrDefaultAsync(s => s.EmailVerificationToken == token);
+            if (sponsor == null || sponsor.EmailTokenExpiry < DateTime.UtcNow)
+            {
+                return false;
+            }
+
+            sponsor.IsEmailVerified = true;
+            sponsor.EmailVerificationToken = null;
+            sponsor.EmailTokenExpiry = null;
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

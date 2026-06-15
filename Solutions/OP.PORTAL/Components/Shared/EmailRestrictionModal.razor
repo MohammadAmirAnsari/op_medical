@@ -1,0 +1,92 @@
+@using MudBlazor
+@using OP.PORTAL.Services
+@using System.Threading.Tasks
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large" />
+            <MudText Typo="Typo.h5" Class="font-weight-bold">Email Verification Required</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div style="text-align: center; padding: 15px 0;">
+            <MudText Typo="Typo.body1" Class="mb-4">
+                Your account is temporarily restricted due to security reasons. 
+                Please verify your email address first to access the portal services.
+            </MudText>
+            
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Square="true" Class="my-3">
+                A verification link has been sent to your registered email: <b>@UserEmail</b>.
+            </MudAlert>
+            
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                If you did not receive the email in your inbox, you can generate a new link using the button below.
+            </MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="d-flex flex-column gap-2 w-100 px-4 pb-3">
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Mail" 
+                       OnClick="ResendVerificationMail" 
+                       Disabled="@_isProcessing"
+                       FullWidth="true">
+                @(_isProcessing ? "Sending Link..." : "Resend Verification Link")
+            </MudButton>
+            
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Error" 
+                       StartIcon="@Icons.Material.Filled.Logout" 
+                       OnClick="LogoutUser" 
+                       FullWidth="true">
+                Logout
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public int SponsorId { get; set; }
+    [Parameter] public string UserEmail { get; set; }
+    [Parameter] public string UserName { get; set; }
+
+    private bool _isProcessing = false;
+
+    private async Task ResendVerificationMail()
+    {
+        _isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            string token = await SponsorService.GenerateAndSaveEmailTokenAsync(SponsorId);
+            string baseUrl = NavigationManager.BaseUri;
+            string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
+            
+            _ = Task.Run(async () => await OP.PORTAL.Helpers.EmailHelper.SendMagicLinkAsync(UserEmail, UserName, magicLink));
+            
+            Snackbar.Add("A new verification link has been sent to your email!", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an issue sending the email. Please try again later.", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void LogoutUser()
+{
+    MudDialog.Close(MudBlazor.DialogResult.Cancel());
+}
+
+ 
+}

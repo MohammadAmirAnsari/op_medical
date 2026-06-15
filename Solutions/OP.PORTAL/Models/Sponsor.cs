@@ -38,6 +38,10 @@ namespace OP.PORTAL.Models
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
 
         public DateTime? LastLoginDate { get; set; }
+        public bool IsEmailVerified { get; set; } = false;
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? EmailTokenExpiry { get; set; }
+
     }
 
     public class SponsorRegister : Sponsor
@@ -87,6 +91,8 @@ namespace OP.PORTAL.Models
 
         [Required(ErrorMessageResourceName = "ResxRequired", ErrorMessageResourceType = typeof(Resource))]
         public bool IsVerified { get; set; } = false;
+
+        public bool IsEmailVerified { get; set; } = false;
     }
 
     public class SponsorResetPassword
