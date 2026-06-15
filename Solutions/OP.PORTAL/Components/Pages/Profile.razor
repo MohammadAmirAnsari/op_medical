@@ -199,6 +199,7 @@
 @code { 
     private MudForm _form;
     private bool _submitted = false;
+    private string _originalEmail = "";
     SponsorProfile model = new ();
 
     private MudForm _form1;
@@ -216,6 +217,8 @@
         _omancities = _gmRecords.Where(x => x.ParentName == "Oman" && x.MasterType == MasterTypes.CITY).ToList();
         
         model = await SponsorService.GetProfile();
+
+        _originalEmail = model.Email ?? "";
     }
 
     private async Task Submit()
@@ -237,9 +240,25 @@
                 _submitted = true;
                 StateHasChanged();
 
-                int rec = await SponsorService.UpdateProfileAsync(model);
+                bool isEmailChanged = !string.Equals(model.Email, _originalEmail, StringComparison.OrdinalIgnoreCase);
+
+                int rec = await SponsorService.UpdateProfileAsync(model, isEmailChanged);
                 if(rec > 0) {
+                    if (isEmailChanged)
+                    {
+                        string token = await SponsorService.GenerateAndSaveEmailTokenAsync(rec);
+                        string baseUrl = NavigationManager.BaseUri;
+                        string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
+                        
+                        _ = Task.Run(async () => await OP.PORTAL.Helpers.EmailHelper.SendMagicLinkAsync(model.Email, model.Name, magicLink));
+
+                        NavigationManager.NavigateTo("", forceLoad: true);
+                        return;
+                    }
+                    else
+                    {
                     Snackbar.Add(localizer.Html("_ProfileUpdateSuccessMessage"), Severity.Success);
+                    }
                 }
                 else Snackbar.Add(localizer.Html("_ProfileUpdateErrorMessage"), Severity.Error);
                 await ResetRequestAsync();

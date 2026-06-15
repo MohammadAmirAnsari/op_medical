@@ -12,7 +12,7 @@ namespace OP.PORTAL.Services
         Task<List<Sponsor>> GetAllAsync();
         Task<SponsorProfile?> GetProfile();
         Task<int> AddAsync(SponsorRegister request);
-        Task<int> UpdateProfileAsync(SponsorProfile profile);
+        Task<int> UpdateProfileAsync(SponsorProfile profile, bool isEmailChanged);
         Task<int> UpdatePasswordAsync(SponsorResetPassword request);
         Task<bool> IsSponsorPhoneNoAlreadyRegistered(string phoneNo);
         Task<string> GenerateAndSaveEmailTokenAsync(int sponsorId);
@@ -90,7 +90,7 @@ namespace OP.PORTAL.Services
             return null;
         }
 
-        public async Task<int> UpdateProfileAsync(SponsorProfile profile)
+        public async Task<int> UpdateProfileAsync(SponsorProfile profile, bool isEmailChanged)
         {
             int sponserId = await _appTokenHelper.GetSponsorId() ?? 0;
             if(sponserId > 0)
@@ -99,6 +99,11 @@ namespace OP.PORTAL.Services
                 Sponsor? sponsor = await _db.Sponsors.FirstOrDefaultAsync(x => x.Id == sponserId);
                 if (sponsor != null)
                 {
+                    if(isEmailChanged)
+                    {
+                        sponsor.IsEmailVerified = false;
+                    }
+
                     sponsor.IsVerified = true;
                     sponsor.SponsorType = profile.SponsorType;
                     sponsor.NationalId = _aesService.Encrypt(profile.NationalId);
@@ -109,7 +114,7 @@ namespace OP.PORTAL.Services
                     sponsor.ModifiedDate = DateTime.Now;
                     sponsor.LastModifiedBy = await _appTokenHelper.GetUsername();
                     _db.Sponsors.Update(sponsor);
-                    return await _db.SaveChangesAsync();
+                    return await _db.SaveChangesAsync() > 0 ? sponsor.Id : 0;
                 }
             }
             return 0;

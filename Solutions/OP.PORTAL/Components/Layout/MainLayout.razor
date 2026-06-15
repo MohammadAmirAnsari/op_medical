@@ -182,9 +182,14 @@
         };
 
         var dialog = await Dialog.ShowAsync<EmailRestrictionModal>("Verification Required", parameters, options);
-        await dialog.Result;
+        var result = await dialog.Result;
         
         _isModalOpen = false;
+
+        if (result.Canceled)
+        {
+            await Logout();
+        }
     }
 
     private void DrawerToggle()
