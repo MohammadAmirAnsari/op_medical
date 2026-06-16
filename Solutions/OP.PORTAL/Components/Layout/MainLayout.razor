@@ -4,6 +4,7 @@
 @using OP.PORTAL.Components.Shared
 @inherits LayoutComponentBase
 @inject NavigationManager navigator
+@inject NavigationManager NavigationManager
 @inject IStringLocalizer<AppResource> localizer
 
 <style>
@@ -90,12 +91,17 @@
     private bool _isModalOpen = false;
     
     private static bool _isLoggingOut = false;
-    
-    private string dynamic_blur_class => _isEmailVerified ? "" : "portal-lock-blur";
+    private IDialogReference? _activeDialog = null;
+
+    private string dynamic_blur_class => (!_isEmailVerified && !IsProfilePage()) ? "portal-lock-blur" : "";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        NavigationManager.LocationChanged += OnLocationChanged;
+        
+        CheckCurrentPage();
         
         _isLoggingOut = false;
 
@@ -108,7 +114,48 @@
                 DefaultBorderRadius = "8px"
             }
         };
+    }
 
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (IsProfilePage())
+        {
+            _isEmailVerified = true;
+            if (_activeDialog != null && _isModalOpen)
+            {
+                Dialog.Close(_activeDialog);
+                _isModalOpen = false;
+                _activeDialog = null;
+            }
+        }
+
+        CheckCurrentPage();
+        
+        await InvokeAsync(async () => 
+        {
+            await CheckEmailVerificationStatus();
+            StateHasChanged();
+        });
+    }
+
+    private void CheckCurrentPage()
+    {
+        if (IsProfilePage())
+        {
+            _isEmailVerified = true;
+            _isModalOpen = false;
+        }
+    }
+
+    private bool IsProfilePage()
+    {
+        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        return string.Equals(relativePath, "profile", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -134,13 +181,11 @@
 
     private async Task CheckEmailVerificationStatus()
     {
-        if (_isLoggingOut) return;
+        if (_isLoggingOut || IsProfilePage()) return;
 
         try
         {
             var profile = await SponsorService.GetProfile();
-            
-            if (_isLoggingOut) return;
 
             if (profile != null)
             {
@@ -160,7 +205,7 @@
 
     private async Task OpenGlobalLockModal(SponsorProfile profile)
     {
-        if (_isLoggingOut) return;
+        if (_isLoggingOut || IsProfilePage()) return;
         
         _isModalOpen = true;
         StateHasChanged();
@@ -181,10 +226,11 @@
             FullWidth = true 
         };
 
-        var dialog = await Dialog.ShowAsync<EmailRestrictionModal>("Verification Required", parameters, options);
-        var result = await dialog.Result;
+        _activeDialog = await Dialog.ShowAsync<EmailRestrictionModal>("Verification Required", parameters, options);
+        var result = await _activeDialog.Result;
         
         _isModalOpen = false;
+        _activeDialog = null;
 
         if (result.Canceled)
         {
@@ -258,7 +304,8 @@
 
         isAuthenticated = false;
         _isModalOpen = false;
-        
+
+        _activeDialog = null;
         navigator.NavigateTo("", forceLoad: true);
     }
 }

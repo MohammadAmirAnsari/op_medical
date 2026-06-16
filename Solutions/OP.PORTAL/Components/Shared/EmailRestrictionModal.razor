@@ -20,6 +20,10 @@
                 A verification link has been sent to your registered email: <b>@UserEmail</b>.
             </MudAlert>
             
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-3">
+                Your current email is <b>@UserEmail</b>. If you want to update your email or entered a wrong address, click on <b>Update Email Profile</b> below.
+            </MudAlert>
+            
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
                 If you did not receive the email in your inbox, you can generate a new link using the button below.
             </MudText>
@@ -35,6 +39,14 @@
                        Disabled="@_isProcessing"
                        FullWidth="true">
                 @(_isProcessing ? "Sending Link..." : "Resend Verification Link")
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Info" 
+                       StartIcon="@Icons.Material.Filled.ManageAccounts" 
+                       OnClick="GoToProfilePage" 
+                       FullWidth="true">
+                Update Email Profile
             </MudButton>
             
             <MudButton Variant="Variant.Outlined" 
@@ -83,10 +95,14 @@
         }
     }
 
-    private void LogoutUser()
-{
-    MudDialog.Close(MudBlazor.DialogResult.Cancel());
-}
+    private void GoToProfilePage()
+    {
+        MudDialog.Close(MudBlazor.DialogResult.Ok(true));
+        NavigationManager.NavigateTo("profile");
+    }
 
- 
+    private void LogoutUser()
+    {
+        MudDialog.Close(MudBlazor.DialogResult.Cancel());
+    }
 }

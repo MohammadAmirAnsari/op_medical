@@ -217,8 +217,14 @@
         _omancities = _gmRecords.Where(x => x.ParentName == "Oman" && x.MasterType == MasterTypes.CITY).ToList();
         
         model = await SponsorService.GetProfile();
+        if(model != null){
 
-        _originalEmail = model.Email ?? "";
+            _originalEmail = model.Email;
+        }
+        else
+        {
+            _originalEmail = "";
+        }
     }
 
     private async Task Submit()
