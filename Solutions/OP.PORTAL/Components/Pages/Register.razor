@@ -294,7 +294,7 @@
 
                     string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
                     
-                    _ = Task.Run(async () => await OP.PORTAL.Helpers.EmailHelper.SendMagicLinkAsync(model.Email, model.Name, magicLink));
+                    _ = Task.Run(async () => await EmailHelper.SendMagicLinkAsync(model.Email, model.Name, magicLink));
 
                     var parameters = new DialogParameters<EmailVerificationModal>();
                     parameters.Add(x => x.UserEmail, model.Email);

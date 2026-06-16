@@ -105,6 +105,7 @@ namespace OP.PORTAL
             builder.Services.AddScoped<CountriesNowServices>();
             builder.Services.AddScoped<AuthenticationStateProvider, AuthStateHelper>();
             builder.Services.AddScoped<BarcodeService>();
+            builder.Services.AddScoped<EmailHelper>();
 
             var isBankStatusSchedulerEnabled = Convert.ToBoolean(builder.Configuration.GetSection("SmartPay:BankStatusScheduler").Value);
             var bankStatusSchedulerTimeInterval = Convert.ToInt16(builder.Configuration.GetSection("SmartPay:BankStatusSchedulerRunTime").Value);

@@ -80,7 +80,7 @@
             string baseUrl = NavigationManager.BaseUri;
             string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
             
-            _ = Task.Run(async () => await OP.PORTAL.Helpers.EmailHelper.SendMagicLinkAsync(UserEmail, UserName, magicLink));
+            _ = Task.Run(async () => await EmailHelper.SendMagicLinkAsync(UserEmail, UserName, magicLink));
             
             Snackbar.Add("A new verification link has been sent to your email!", Severity.Success);
         }
