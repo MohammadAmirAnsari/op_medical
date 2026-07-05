@@ -87,8 +87,12 @@
 
     
     
-    private bool _isEmailVerified = true;
+    private bool _isEmailVerified = false;
+    private bool _isCheckInProgress = false;
     private bool _isModalOpen = false;
+    private bool _wasOnProfilePage = false;
+    private bool _isFirstRenderDone = false;
+
     
     private static bool _isLoggingOut = false;
     private IDialogReference? _activeDialog = null;
@@ -118,9 +122,10 @@
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        if (IsProfilePage())
+        bool isProfileNow = IsProfilePage();
+
+        if (isProfileNow)
         {
-            _isEmailVerified = true;
             if (_activeDialog != null && _isModalOpen)
             {
                 Dialog.Close(_activeDialog);
@@ -129,9 +134,19 @@
             }
         }
 
+        if (_wasOnProfilePage && !isProfileNow)
+        {
+            _isEmailVerified = false;
+        }
+
+    _wasOnProfilePage = isProfileNow;
+
         CheckCurrentPage();
-        
-        await InvokeAsync(async () => 
+        if (!_isFirstRenderDone) return;
+
+        if (_isEmailVerified) return;
+
+        await InvokeAsync(async () =>
         {
             await CheckEmailVerificationStatus();
             StateHasChanged();
@@ -142,7 +157,6 @@
     {
         if (IsProfilePage())
         {
-            _isEmailVerified = true;
             _isModalOpen = false;
         }
     }
@@ -169,6 +183,7 @@
         }
         else if (firstRender)
         {
+            _isFirstRenderDone = true;
             await CheckEmailVerificationStatus();
         }
 
@@ -181,7 +196,10 @@
 
     private async Task CheckEmailVerificationStatus()
     {
-        if (_isLoggingOut || IsProfilePage()) return;
+        if (_isCheckInProgress || _isEmailVerified || _isLoggingOut || IsProfilePage())
+            return;
+
+        _isCheckInProgress = true;
 
         try
         {
@@ -193,13 +211,17 @@
 
                 if (!_isEmailVerified && !_isModalOpen)
                 {
-                    await InvokeAsync(async () => await OpenGlobalLockModal(profile));
+                    await OpenGlobalLockModal(profile);
                 }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Global Interceptor Exception: {ex.Message}");
+        }
+        finally
+        {
+            _isCheckInProgress = false;
         }
     }
 
