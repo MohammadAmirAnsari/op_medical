@@ -102,8 +102,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        NavigationManager.LocationChanged += OnLocationChanged;
         
         _isLoggingOut = false;
 
@@ -116,24 +114,6 @@
                 DefaultBorderRadius = "8px"
             }
         };
-    }
-
-    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
-    {
-        if (!_isFirstRenderDone) return;
-
-        if (_isEmailVerified) return;
-
-        await InvokeAsync(async () =>
-        {
-            await CheckEmailVerificationStatus();
-            StateHasChanged();
-        });
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
