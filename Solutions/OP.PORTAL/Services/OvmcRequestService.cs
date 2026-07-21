@@ -202,14 +202,14 @@ namespace OP.PORTAL.Services
             var urn = payload["OvmcUrnNumber"]?.ToString();
             if (string.IsNullOrEmpty(urn)) return (false, "OvmcUrnNumber", "OvmcUrnNumber is required.");
 
-            // we can edit the record only if the status are not COMPLETED or INPROCESS
+            // we can edit the record only if the status are not COMPLETED
             var existingRecord = await _db.OvmcRequests.FirstOrDefaultAsync(r =>
                 r.OvmcUrnNumber.Equals(urn)
             );
 
             if (existingRecord == null) return (false, "OvmcUrnNumber", "Record Not Found.");
 
-            if (existingRecord.RequestStatus == OvmcRequestStatus.COMPLETED || existingRecord.RequestStatus == OvmcRequestStatus.INPROCESS)
+            if (existingRecord.RequestStatus == OvmcRequestStatus.COMPLETED)
                 return (false, "OvmcUrnNumber", "Update not allowed. The record is already in '" + existingRecord.RequestStatus + "' status.");
 
             
