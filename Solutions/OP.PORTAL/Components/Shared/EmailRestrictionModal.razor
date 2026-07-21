@@ -2,66 +2,102 @@
 @using OP.PORTAL.Services
 @using System.Threading.Tasks
 
-<MudDialog>
-    <TitleContent>
-        <div class="d-flex align-center gap-2">
-            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large" />
-            <MudText Typo="Typo.h5" Class="font-weight-bold">Email Verification Required</MudText>
-        </div>
-    </TitleContent>
+<MudDialog Options="_options">
     <DialogContent>
-        <div style="text-align: center; padding: 15px 0;">
-            <MudText Typo="Typo.body1" Class="mb-4">
-                Your account is temporarily restricted due to security reasons. 
-                Please verify your email address first to access the portal services.
-            </MudText>
+        <div style="max-width: 460px; width: 100%; margin: 0 auto; padding: 10px 0;">
             
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Square="true" Class="my-3">
-                A verification link has been sent to your registered email: <b>@UserEmail</b>.
+            
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Square="true" Class="mb-5 rounded" Style="background-color: #fde8e8; color: #9b1c1c; border: 1px solid #fbd5d5;">
+                <div class="d-flex align-center gap-1">
+                    <span style="font-size: 0.95rem; font-weight: 500;">
+                        Your account is temporarily restricted due to security reasons
+                    </span>
+                </div>
             </MudAlert>
-            
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-3">
-                Your current email is <b>@UserEmail</b>. If you want to update your email or entered a wrong address, click on <b>Update Profile</b> below.
-            </MudAlert>
-            
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
-                If you did not receive the email in your inbox, you can generate a new link using the button below.
+
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-5 text-center" Style="color: #616161; font-size: 0.95rem;">
+                We've sent a verification link to the address below. Click it to continue.
             </MudText>
-        </div>
-    </DialogContent>
-    <DialogActions>
-        <div class="d-flex flex-column gap-2 w-100 px-4 pb-3">
-            <MudButton Variant="Variant.Filled" 
-                       Color="Color.Primary" 
-                       Size="Size.Large"
-                       StartIcon="@Icons.Material.Filled.Mail" 
-                       OnClick="ResendVerificationMail" 
-                       Disabled="@_isProcessing"
-                       FullWidth="true">
-                @(_isProcessing ? "Sending Link..." : "Resend Verification Link")
+
+            <div class="d-flex align-center gap-2 border rounded px-3 py-1 my-4" style="background-color: #fafafa; border-color: #e0e0e0 !important; height: 56px;">
+                @if (_isEditingEmail)
+                {
+                   <MudTextField @bind-Value="UserEmail" 
+                                Variant="Variant.Text"
+                                Margin="Margin.Dense" />
+
+                    <MudButton OnClick="SaveEmail" Color="Color.Success" Variant="Variant.Filled">
+                        Save
+                    </MudButton>
+
+                }
+                else
+                {
+                    <MudText Style="font-size: 1rem; font-weight: 500; color: #212121; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        @UserEmail
+                    </MudText>
+                    
+                    <MudButton OnClick="StartEditing" Disabled="@_isButtonDisabled" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Style="font-weight: bold; text-decoration: underline; text-transform: none;">
+                        Edit
+                    </MudButton>
+                }
+            </div>
+
+            <MudButton Variant="Variant.Filled"  
+                    Size="Size.Large"
+                    StartIcon="@Icons.Material.Filled.Mail" 
+                    OnClick="ResendVerificationMail" 
+                    Disabled="@_isButtonDisabled"
+                    FullWidth="true"
+                    Color="Color.Secondary">
+                @if (_isButtonDisabled)
+                {
+                    @($"Resend in {_countdownTime}")
+                }
+                else
+                {
+                    @("Resend Verification Link")
+                }
             </MudButton>
 
-            <MudButton Variant="Variant.Filled" 
-                       Color="Color.Info" 
-                       StartIcon="@Icons.Material.Filled.ManageAccounts" 
-                       OnClick="GoToProfilePage" 
-                       FullWidth="true">
-                Update Profile
-            </MudButton>
-            
-            <MudButton Variant="Variant.Outlined" 
+            <div class="mt-4 mb-6 w-100">
+               <MudButton Variant="Variant.Outlined" 
                        Color="Color.Error" 
                        StartIcon="@Icons.Material.Filled.Logout" 
                        OnClick="LogoutUser" 
                        FullWidth="true">
                 Logout
             </MudButton>
+            </div>
+
+
         </div>
-    </DialogActions>
+    </DialogContent>
 </MudDialog>
 
 @code {
-    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+    
+    private bool _isEditingEmail = false;
+
+    
+    private bool _isButtonDisabled = false;
+    private int _secondsLeft = 300;
+    private string _countdownTime = "05:00";
+    private System.Timers.Timer _timer;
+
+    [CascadingParameter] 
+    private IMudDialogInstance MudDialog { get; set; }
+
+
+    private MudBlazor.DialogOptions _options = new MudBlazor.DialogOptions() { 
+        MaxWidth = MudBlazor.MaxWidth.Small, 
+        FullWidth = true,
+        NoHeader = true
+    };
+
+   
+
+
 
     [Parameter] public int SponsorId { get; set; }
     [Parameter] public string UserEmail { get; set; }
@@ -69,8 +105,54 @@
 
     private bool _isProcessing = false;
 
+     private void StartEditing() => _isEditingEmail = true;
+   
+
+    private async Task SaveEmail()
+    {
+         var emailValidator = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
+
+        if (string.IsNullOrWhiteSpace(UserEmail) || !emailValidator.IsValid(UserEmail))
+        {
+            Snackbar.Add("Invalid email format! Please enter a correct email.", Severity.Error);
+            
+            return;
+        }
+        
+        try
+        {
+            _isEditingEmail = false;
+            StateHasChanged();
+        
+
+            bool isEmailUpdated = await SponsorService.UpdateEmailOnlyAsync(SponsorId, UserEmail);
+
+            if(isEmailUpdated) {
+                Snackbar.Add("Email updated successfully! Please click 'Resend' to verify.", Severity.Success);
+            } 
+            else {
+                Snackbar.Add("Failed to update email. Please try again.", Severity.Error);
+                _isEditingEmail = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to update email. Please try again.", Severity.Error);
+            _isEditingEmail = true;
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+    
+
     private async Task ResendVerificationMail()
     {
+
+        _isButtonDisabled = true;
+        _secondsLeft = 300; 
+        _countdownTime = "05:00";
         _isProcessing = true;
         StateHasChanged();
 
@@ -81,8 +163,15 @@
             string magicLink = $"{baseUrl}api/EmailAuth/verify-email?token={token}";
             
             _ = Task.Run(async () => await EmailHelper.SendMagicLinkAsync(UserEmail, UserName, magicLink));
+
             
             Snackbar.Add("A new verification link has been sent to your email!", Severity.Success);
+
+            _timer = new System.Timers.Timer(1000);
+            _timer.Elapsed += OnTimerElapsed;
+            _timer.AutoReset = true;
+            _timer.Start();
+
         }
         catch (Exception)
         {
@@ -94,6 +183,25 @@
             StateHasChanged();
         }
     }
+
+    private void OnTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        _secondsLeft--;
+
+        if (_secondsLeft <= 0)
+        {
+            _isButtonDisabled = false;
+            _timer.Stop();
+            _timer.Dispose();
+        }
+        else
+        {
+            System.TimeSpan time = System.TimeSpan.FromSeconds(_secondsLeft);
+            _countdownTime = time.ToString(@"mm\:ss");
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
 
     private void GoToProfilePage()
     {

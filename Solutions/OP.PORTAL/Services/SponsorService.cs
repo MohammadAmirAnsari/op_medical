@@ -13,6 +13,7 @@ namespace OP.PORTAL.Services
         Task<SponsorProfile?> GetProfile();
         Task<int> AddAsync(SponsorRegister request);
         Task<int> UpdateProfileAsync(SponsorProfile profile, bool isEmailChanged);
+        Task<bool> UpdateEmailOnlyAsync(int sponsorId, string newEmail);
         Task<int> UpdatePasswordAsync(SponsorResetPassword request);
         Task<bool> IsSponsorPhoneNoAlreadyRegistered(string phoneNo);
         Task<string> GenerateAndSaveEmailTokenAsync(int sponsorId);
@@ -119,6 +120,22 @@ namespace OP.PORTAL.Services
             }
             return 0;
         }
+
+        public async Task<bool> UpdateEmailOnlyAsync(int sponsorId, string newEmail)
+        {
+            using var _db = _contextFactory.CreateDbContext();
+            Sponsor? sponsor = await _db.Sponsors.FirstOrDefaultAsync(x => x.Id == sponsorId);
+            if (sponsor != null)
+            {
+                sponsor.Email = newEmail;
+                sponsor.ModifiedDate = DateTime.Now;
+                sponsor.LastModifiedBy = await _appTokenHelper.GetUsername();
+                _db.Sponsors.Update(sponsor);
+                return await _db.SaveChangesAsync() > 0;
+            }
+            return false;
+        }
+
 
         public async Task<int> UpdatePasswordAsync(SponsorResetPassword request)
         {

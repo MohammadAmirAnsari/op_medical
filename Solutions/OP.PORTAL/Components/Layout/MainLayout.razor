@@ -97,15 +97,13 @@
     private static bool _isLoggingOut = false;
     private IDialogReference? _activeDialog = null;
 
-    private string dynamic_blur_class => (!_isEmailVerified && !IsProfilePage()) ? "portal-lock-blur" : "";
+    private string dynamic_blur_class => (!_isEmailVerified) ? "portal-lock-blur" : "";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
         NavigationManager.LocationChanged += OnLocationChanged;
-        
-        CheckCurrentPage();
         
         _isLoggingOut = false;
 
@@ -122,26 +120,6 @@
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        bool isProfileNow = IsProfilePage();
-
-        if (isProfileNow)
-        {
-            if (_activeDialog != null && _isModalOpen)
-            {
-                Dialog.Close(_activeDialog);
-                _isModalOpen = false;
-                _activeDialog = null;
-            }
-        }
-
-        if (_wasOnProfilePage && !isProfileNow)
-        {
-            _isEmailVerified = false;
-        }
-
-    _wasOnProfilePage = isProfileNow;
-
-        CheckCurrentPage();
         if (!_isFirstRenderDone) return;
 
         if (_isEmailVerified) return;
@@ -151,20 +129,6 @@
             await CheckEmailVerificationStatus();
             StateHasChanged();
         });
-    }
-
-    private void CheckCurrentPage()
-    {
-        if (IsProfilePage())
-        {
-            _isModalOpen = false;
-        }
-    }
-
-    private bool IsProfilePage()
-    {
-        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        return string.Equals(relativePath, "profile", StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()
@@ -196,7 +160,7 @@
 
     private async Task CheckEmailVerificationStatus()
     {
-        if (_isCheckInProgress || _isEmailVerified || _isLoggingOut || IsProfilePage())
+        if (_isCheckInProgress || _isEmailVerified || _isLoggingOut)
             return;
 
         _isCheckInProgress = true;
@@ -227,7 +191,7 @@
 
     private async Task OpenGlobalLockModal(SponsorProfile profile)
     {
-        if (_isLoggingOut || IsProfilePage()) return;
+        if (_isLoggingOut) return;
         
         _isModalOpen = true;
         StateHasChanged();
@@ -248,7 +212,7 @@
             FullWidth = true 
         };
 
-        _activeDialog = await Dialog.ShowAsync<EmailRestrictionModal>("Verification Required", parameters, options);
+        _activeDialog = await Dialog.ShowAsync<EmailRestrictionModal>(String.Empty, parameters, options);
         var result = await _activeDialog.Result;
         
         _isModalOpen = false;
